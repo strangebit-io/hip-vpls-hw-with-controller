@@ -110,7 +110,7 @@ def hip_loop():
     while True:
         try:
             logging.debug("Got HIP packet on the interface")
-            packet = bytearray(hip_socket.recv(1518))
+            packet = bytearray(hip_socket.recv(Ethernet.MAX_ETHERNET_FRAME));
             packets = hiplib.process_hip_packet(packet);
             for (packet, dest) in packets:
                 hip_socket.sendto(packet, dest)
@@ -121,7 +121,7 @@ def hip_loop():
 def ip_sec_loop():
     while True:
         try:
-            packet = bytearray(ip_sec_socket.recv(1518));
+            packet = bytearray(ip_sec_socket.recv(Ethernet.MAX_ETHERNET_FRAME));
             (frame, src, dst) = hiplib.process_ip_sec_packet(packet)
             if not frame:
                 continue;
