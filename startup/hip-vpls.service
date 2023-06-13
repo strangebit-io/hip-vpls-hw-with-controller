@@ -9,7 +9,7 @@ Restart=always
 RestartSec=1
 User=root
 
-WorkingDirectory=/opt/hipl-vpls/
+WorkingDirectory=/opt/hip-vpls/
 ExecStart=/usr/bin/python3 /opt/hip-vpls/switchd.py
 
 [Install]
