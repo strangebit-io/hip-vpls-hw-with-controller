@@ -2,7 +2,7 @@
 
 Deployment scenario:
 
-
+```
 +---------+ 100Mb/s  +-----------+ 100Mb/s+----------------+
 | IP cam  |----------| CE Switch |--------| Ambient sensors|
 +---------+          +-----------+        +----------------+
@@ -34,7 +34,7 @@ Deployment scenario:
 +-----------+          |   Router  |----+
                        +-----------+
                        
-
+```
 To deploy HIP-VPLS on hardware (HIP switch) follow these steps:
 
 In folder hip-vpls-hw edit the following files:
