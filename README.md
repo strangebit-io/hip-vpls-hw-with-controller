@@ -1,4 +1,4 @@
-# Host Identity Based VPLS tailored for NanoPiR2S
+# Host Identity Protocol Based VPLS tailored for NanoPiR2S
 
 Deployment scenario:
 
