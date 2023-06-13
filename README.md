@@ -10,11 +10,11 @@ Deployment scenario:
                             | 1 Gb/s
                             |
                      +-----------+
-                     |HIP switch |
+                     |HIP switch | NanoPi R2S
                      +-----------+
                             |                                                 +------------------+
                             | 1 Gb/s                                          | Sensors/Actuators|
-                            |                                                /+------------------+
+  NanoPi R2S                |               NanoPi R2S                       /+------------------+
 +-----------+  1Gb/s +--------------+1 Gb/s+-----------+ 1 Gb/s+-----------+/ 100 Mb/s
 |HIP switch |--------| Public cloud |------|HIP switch |-------| CE Switch |
 +-----------+        +--------------+      +-----------+       +-----------+
@@ -22,7 +22,7 @@ Deployment scenario:
                             |  +--------+                                    \
                             | 1 Gb/s    |                                     +------------------+
                        +-----------+    |                                     | Sensors/Actuators|
-                       |HIP switch |    |                                     +------------------+
+            NanoPi R2S |HIP switch |    |                                     +------------------+
                        +-----------+    |
                             | 1 Gb/s    |
 +-----------+ 1 Gb/s   +-----------+    | 10 Mb/s
