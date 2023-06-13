@@ -1,0 +1,16 @@
+[Unit]
+Description=Host Identity based VPLS endpoint
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=root
+
+WorkingDirectory=/opt/hipl-vpls/
+ExecStart=/usr/bin/python3 /opt/hip-vpls/switchd.py
+
+[Install]
+WantedBy=multi-user.target
