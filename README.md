@@ -32,6 +32,7 @@ Deployment scenario:
 | DHCP/DNS  | 1 Gb/s   +-----------+    |
 +-----------+          |   Router  |----+
                        +-----------+
+                       
 
 To deploy HIP-VPLS on hardware (HIP switch) follow these steps:
 
