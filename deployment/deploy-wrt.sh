@@ -17,6 +17,7 @@ rsync -rv  hiplib  switchd.py  switchfabric.py /opt/hip-vpls/
 echo "Copying the service file"
 cd startup
 cp hip-vpls /etc/init.d/
+chmod +x /etc/init.d/hip-vpls
 /etc/init.d/hip-vpls enable
 /etc/init.d/hip-vpls start
 

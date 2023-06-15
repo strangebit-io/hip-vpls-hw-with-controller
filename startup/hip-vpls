@@ -8,11 +8,11 @@ STOP=15
 start() {        
     echo "Starting new process"
     cd /opt/hip-vpls/
-    python3 switchd.py
+    python3 switchd.py &
 }                 
  
 stop() {
     echo "Killing the switchd.py process"
-    pid=`ps | grep switchd.py | grep python3 | awk -F" " '{print $1}'
+    pid=`ps | grep switchd.py | grep python3 | awk -F" " '{print $1}'`
     kill -2 $
 }
