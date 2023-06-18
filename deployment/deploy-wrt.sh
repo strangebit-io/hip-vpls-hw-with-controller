@@ -8,7 +8,7 @@ opkg install rsync
 opkg install python3
 opkg install python3-pip
 opkg install python3-netifaces
-sudo pip3 install pycryptodome
+pip3 install pycryptodome
 echo "Preparing directories"
 mkdir /opt/hip-vpls/
 cd ..
