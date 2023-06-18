@@ -14,5 +14,5 @@ start() {
 stop() {
     echo "Killing the switchd.py process"
     pid=`ps | grep switchd.py | grep python3 | awk -F" " '{print $1}'`
-    kill -2 $
+    kill -9 $pid
 }
