@@ -39,6 +39,7 @@ To deploy HIP-VPLS on hardware (HIP switch) follow these steps:
 
 In folder hip-vpls-hw perform the following (generate keys, edit the files):
 - generate the public and private keys for all routers
+- generate HIT using appropriate tool (can be found under tools folder)
 - update the hosts file (add mapping between HIT and IP address)
 - update the mesh file (add all pairs of HITs)
 - update the rules file (update the firewall rules)
