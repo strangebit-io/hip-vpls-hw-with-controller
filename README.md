@@ -67,9 +67,16 @@ We have tested the testbed in the following way:
 - end-to-end iperf test
 - multicast traffic (RTSP stream to a multicast source)
 
-Currently the performance is not production grade
+Currently the performance is not production grade. We have got 40Mb/s in a simulation environment.
 
 # Compiling the source code for performance
 
-We are currently working on performance of the solution
+We are currently working on performance of the solution.
+
+Run these commands on every HIP-switch to improve the performance.
+
+```
+/sbin/ethtool -K eth0 rx off tx off sg off 
+/sbin/ethtool -K eth1 rx off tx off sg off 
+```
 

@@ -8,8 +8,6 @@ STOP=15
 start() {
     echo "Starting new process"
     cd /opt/hip-vpls/
-    /sbin/ethtool -K r1-eth0 rx off tx off sg off 
-    /sbin/ethtool -K r1-eth1 rx off tx off sg off 
     pid=`ps | grep switchd.py | grep python3 | awk -F" " '{print $1}'`
     if [ -z "$pid" ]; then
         python3 switchd.py &
