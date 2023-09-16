@@ -37,10 +37,13 @@ Deployment scenario:
 ```
 To deploy HIP-VPLS on hardware (HIP switch) follow these steps:
 
-In folder hip-vpls-hw edit the following files:
-- hosts (Add mapping between HIT and IP address)
-- mesh (add all pairs of HITs)
-- config.py (change the CE facing interface, public source IP address)
+In folder hip-vpls-hw perform the following (generate keys, edit the files):
+- generate the public and private keys for all routers
+- generate HIT using appropriate tool (can be found under tools folder)
+- update the hosts file (add mapping between HIT and IP address)
+- update the mesh file (add all pairs of HITs)
+- update the rules file (update the firewall rules)
+- in config.py you need to select proper options (change the CE facing interface, public source IP address, change algorithms)
 
 Next deploy the service:
 
@@ -64,7 +67,9 @@ We have tested the testbed in the following way:
 - end-to-end iperf test
 - multicast traffic (RTSP stream to a multicast source)
 
+Currently the performance is not production grade
+
 # Compiling the source code for performance
 
-To be done
+We are currently working on performance of the solution
 
