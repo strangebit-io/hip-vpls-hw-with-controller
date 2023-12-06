@@ -2071,19 +2071,23 @@ class HIPLib():
 
             sv.data_timeout = time.time() + self.config["general"]["UAL"];
 
+            """
             logging.debug("------------------- HMAC key ------------------");
             logging.debug(hmac_key);
             logging.debug("Cipher key");
             logging.debug(cipher_key);
+            """
 
             icv         = list(ip_sec_packet.get_byte_buffer())[-hmac_alg.LENGTH:];
 
             #logging.debug("Calculating ICV over IPSec packet");
             #logging.debug(list(ip_sec_packet.get_byte_buffer())[:-hmac_alg.LENGTH]);
 
+            """
             logging.debug("---------------------ICV--------------------")
             logging.debug(bytearray(icv))
             logging.debug("--------------------------------------------")
+            """
 
             if bytearray(icv) != hmac_alg.digest(bytearray(list(ip_sec_packet.get_byte_buffer())[:-hmac_alg.LENGTH])):
                 logging.critical("Invalid ICV in IPSec packet");
@@ -2159,7 +2163,7 @@ class HIPLib():
             #logging.info("Next header %s " % (packet.get_next_header()));
             #logging.info("Hop limit %s" % (packet.get_hop_limit()));
             # Get the state
-            logging.debug("Processing L2 frame")
+            #logging.debug("Processing L2 frame")
             if Utils.is_hit_smaller(rhit, ihit):
                 hip_state = self.hip_state_machine.get(Utils.ipv6_bytes_to_hex_formatted(rhit), 
                     Utils.ipv6_bytes_to_hex_formatted(ihit));
@@ -2275,37 +2279,41 @@ class HIPLib():
                 iv         = list(Utils.generate_random(cipher.BLOCK_SIZE));
                 sa_record.increment_sequence();
 
+                """
                 logging.debug("HMAC key");
                 logging.debug(hmac_key);
                 logging.debug("Cipher key");
                 logging.debug(cipher_key);
                 logging.debug("IV");
                 logging.debug(iv);
+                """
 
                 padded_data = IPSec.IPSecUtils.pad(cipher.BLOCK_SIZE, data, 0x0);
-                logging.debug("Length of the padded data %d" % (len(padded_data)));
+                #logging.debug("Length of the padded data %d" % (len(padded_data)));
 
                 encrypted_data = cipher.encrypt(cipher_key, bytearray(iv), bytearray(padded_data));
                 
+                """
                 logging.debug("Padded data");
                 logging.debug(iv + list(encrypted_data));
                 logging.debug(list(encrypted_data));
 
                 logging.debug("Encrypted padded data");
                 logging.debug(padded_data);
+                """
 
                 ip_sec_packet = IPSec.IPSecPacket();
                 ip_sec_packet.set_spi(spi);
                 ip_sec_packet.set_sequence(seq);
                 ip_sec_packet.add_payload(iv + list(encrypted_data));
 
-                logging.debug("Calculating ICV over IPSec packet");
-                logging.debug(list(ip_sec_packet.get_byte_buffer()));
+                #logging.debug("Calculating ICV over IPSec packet");
+                #logging.debug(list(ip_sec_packet.get_byte_buffer()));
 
                 icv = hmac_alg.digest(bytearray(ip_sec_packet.get_byte_buffer()));
-                logging.debug("---------------------ICV--------------------")
-                logging.debug(bytearray(icv))
-                logging.debug("--------------------------------------------")
+                #logging.debug("---------------------ICV--------------------")
+                #logging.debug(bytearray(icv))
+                #logging.debug("--------------------------------------------")
 
                 ip_sec_packet.add_payload(list(icv));
 
@@ -2319,7 +2327,7 @@ class HIPLib():
                 ipv4_packet.set_ihl(IPv4.IPV4_IHL_NO_OPTIONS);
                 ipv4_packet.set_payload(ip_sec_packet.get_byte_buffer());
 
-                logging.debug("Sending IPSEC packet to %s %d bytes" % (Utils.ipv4_bytes_to_string(dst), len(ipv4_packet.get_buffer())));
+                #logging.debug("Sending IPSEC packet to %s %d bytes" % (Utils.ipv4_bytes_to_string(dst), len(ipv4_packet.get_buffer())));
 
                 #ip_sec_socket.sendto(
                 #    bytearray(ipv4_packet.get_buffer()), 

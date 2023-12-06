@@ -34,20 +34,20 @@ class FIB():
         # Broadcast address
         if dmac[5] == 0xFF and dmac[4] == 0xFF and dmac[3] == 0xFF \
             and dmac[2] == 0xFF and dmac[1] == 0xFF and dmac[0] == 0xFF:
-            logging.debug("Broadcast frame....")
+            #logging.debug("Broadcast frame....")
             return self.fib_broadcast;
-        logging.debug("Searching for the next hop")
+        #logging.debug("Searching for the next hop")
         # Multicast address
         if dmac[5] & 0x1:
-            logging.debug("Multicast frame....");
+            #logging.debug("Multicast frame....");
             return self.fib_broadcast;
         # Unicast
         #dmac = hexlify(dmac).decode("ascii")
         dmac = int.from_bytes(dmac, byteorder="little")
-        logging.debug("Looking up by the destination MAC address")
+        #logging.debug("Looking up by the destination MAC address")
         if not self.fib_unicast.get(dmac, None):
             return self.fib_broadcast;
-        logging.debug("Message found in the FIB database")
+        #logging.debug("Message found in the FIB database")
         return [self.fib_unicast.get(dmac)];
             
     def set_next_hop(self, dmac, shit, rhit):
