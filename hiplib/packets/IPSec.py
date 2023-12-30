@@ -36,7 +36,7 @@ IPSEC_IV_LENGTH             = 0x10;
 class IPSecPacket():
 	def __init__(self, buffer = None):
 		if not buffer:
-			self.buffer = [0] * (IPSEC_SPI_LENGTH + IPSEC_SEQUENCE_LENGTH)
+			self.buffer = bytearray([0] * (IPSEC_SPI_LENGTH + IPSEC_SEQUENCE_LENGTH))
 		else:
 			self.buffer = buffer
 	def add_payload(self, payload):

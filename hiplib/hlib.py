@@ -271,7 +271,7 @@ class HIPLib():
                 puzzle_param.set_k_value(self.config["security"]["puzzle_difficulty"]);
                 puzzle_param.set_lifetime(self.config["security"]["puzzle_lifetime_exponent"]);
                 puzzle_param.set_random([0] * r_hash.LENGTH, rhash_length = r_hash.LENGTH);
-                puzzle_param.set_opaque(list([0, 0]));
+                puzzle_param.set_opaque(bytearray([0, 0]));
                 
                 # HIP DH groups parameter
                 dh_groups_param = HIP.DHGroupListParameter();
@@ -372,7 +372,7 @@ class HIPLib():
                 hip_r1_packet.set_length(HIP.HIP_DEFAULT_PACKET_LENGTH);
                 # List of mandatory parameters in R1 packet...
                 puzzle_param.set_random(irandom, r_hash.LENGTH);
-                puzzle_param.set_opaque(list(Utils.generate_random(2)));
+                puzzle_param.set_opaque(bytearray(Utils.generate_random(2)));
                 hip_r1_packet.add_parameter(puzzle_param);
                 hip_r1_packet.add_parameter(dh_param);
                 hip_r1_packet.add_parameter(cipher_param);
@@ -478,7 +478,7 @@ class HIPLib():
                         irandom = puzzle_param.get_random(rhash_length = r_hash.LENGTH);
                         opaque = puzzle_param.get_opaque();
                         puzzle_param.set_random([0] * r_hash.LENGTH, r_hash.LENGTH);
-                        puzzle_param.set_opaque(list([0, 0]));
+                        puzzle_param.set_opaque(bytearray([0, 0]));
                     if isinstance(parameter, HIP.DHParameter):	
                         logging.debug("DH parameter");
                         dh_param = parameter;
@@ -499,7 +499,7 @@ class HIPLib():
 
                         oga = HIT.get_responders_oga_id(ihit);
                         logging.debug("Responder's OGA ID %d" % (oga));
-                        logging.debug(list(responder_hi.to_byte_array()));
+                        logging.debug(bytearray(responder_hi.to_byte_array()));
                         responders_hit = HIT.get(responder_hi.to_byte_array(), oga);
                         logging.debug(list(responders_hit))
                         logging.debug(list(ihit))
@@ -1227,12 +1227,12 @@ class HIPLib():
                 original_length = hip_i2_packet.get_length();
                 packet_length = original_length * 8 + len(buf);
                 hip_i2_packet.set_length(int(packet_length / 8));
-                buf = list(hip_i2_packet.get_buffer()) + list(buf);
+                buf = hip_i2_packet.get_buffer() + buf;
                 
                 (aes_key, hmac_key) = Utils.get_keys(keymat, hmac_alg, selected_cipher, rhit, ihit);
                 hmac = HMACFactory.get(hmac_alg, hmac_key);
 
-                if list(hmac.digest(bytearray(buf))) != list(mac_param.get_hmac()):
+                if hmac.digest(buf) != mac_param.get_hmac():
                     logging.critical("Invalid HMAC. Dropping the packet");
                     return [];
 
@@ -1264,7 +1264,7 @@ class HIPLib():
                 packet_length = original_length * 8 + len(buf);
                 
                 hip_i2_packet.set_length(int(packet_length / 8));
-                buf = list(hip_i2_packet.get_buffer()) + list(buf);
+                buf = hip_i2_packet.get_buffer() + buf;
 
                 #signature_alg = RSASHA256Signature(responders_public_key.get_key_info());
                 if isinstance(responders_public_key, RSAPublicKey):
@@ -1501,7 +1501,7 @@ class HIPLib():
 
                 hip_r2_packet.add_parameter(esp_info_param);
 
-                if list(hmac.digest(bytearray(hip_r2_packet.get_buffer()))) != list(hmac_param.get_hmac()):
+                if hmac.digest(hip_r2_packet.get_buffer())) != hmac_param.get_hmac():
                     logging.critical("Invalid HMAC. Dropping the packet");
                     return [];
                 else:
@@ -1516,7 +1516,7 @@ class HIPLib():
                 hip_r2_packet.set_length(HIP.HIP_DEFAULT_PACKET_LENGTH);
 
                 #hip_r2_packet.add_parameter(hmac_param);
-                buf = list(hmac_param.get_byte_buffer());
+                buf = hmac_param.get_byte_buffer();
                 original_length = hip_r2_packet.get_length();
                 packet_length = original_length * 8 + len(buf);
                 hip_r2_packet.set_length(int(packet_length / 8));
@@ -1695,7 +1695,7 @@ class HIPLib():
                 hip_update_packet.set_length(int(packet_length / 8));
                 buf = hip_update_packet.get_buffer() + buf;
 
-                if list(hmac.digest(bytearray(buf))) != list(mac_param.get_hmac()):
+                if hmac.digest(bytearray(buf)) != mac_param.get_hmac():
                     logging.critical("Invalid HMAC. Dropping the packet");
                     return [];
 
@@ -1904,7 +1904,7 @@ class HIPLib():
                 logging.debug(list((buf)));
                 logging.debug("------------------------------------");
 
-                if list(hmac.digest(bytearray(buf))) != list(mac_param.get_hmac()):
+                if hmac.digest(bytearray(buf)) != mac_param.get_hmac():
                     logging.critical("Invalid HMAC. Dropping the packet");
                     return [];
                 logging.debug("HMAC OK");
@@ -2042,7 +2042,7 @@ class HIPLib():
             #buf           = bytearray(ip_sec_socket.recv(2*MTU));
             ipv4_packet   = IPv4.IPv4Packet(packet);
 
-            data          = list(ipv4_packet.get_payload());
+            data          = ipv4_packet.get_payload();
             ip_sec_packet = IPSec.IPSecPacket(data);
 
             # IPv4 fields
@@ -2078,7 +2078,7 @@ class HIPLib():
             logging.debug(cipher_key);
             """
 
-            icv         = list(ip_sec_packet.get_byte_buffer())[-hmac_alg.LENGTH:];
+            icv         = ip_sec_packet.get_byte_buffer()[-hmac_alg.LENGTH:];
 
             #logging.debug("Calculating ICV over IPSec packet");
             #logging.debug(list(ip_sec_packet.get_byte_buffer())[:-hmac_alg.LENGTH]);
@@ -2089,11 +2089,11 @@ class HIPLib():
             logging.debug("--------------------------------------------")
             """
 
-            if bytearray(icv) != hmac_alg.digest(bytearray(list(ip_sec_packet.get_byte_buffer())[:-hmac_alg.LENGTH])):
+            if icv != hmac_alg.digest(ip_sec_packet.get_byte_buffer()[:-hmac_alg.LENGTH]):
                 logging.critical("Invalid ICV in IPSec packet");
                 return  (None, None, None);
 
-            padded_data = list(ip_sec_packet.get_payload())[:-hmac_alg.LENGTH];
+            padded_data = ip_sec_packet.get_payload()[:-hmac_alg.LENGTH];
             #logging.debug("Encrypted padded data");
             #logging.debug(padded_data);
 
@@ -2253,7 +2253,7 @@ class HIPLib():
                 rhit_str    = Utils.ipv6_bytes_to_hex_formatted(rhit);
                 ihit_str    = Utils.ipv6_bytes_to_hex_formatted(ihit);
                 #next_header = packet.get_next_header();
-                data        = list(frame.get_buffer());
+                data        = frame.get_buffer();
 
                 if Utils.is_hit_smaller(rhit, ihit):
                     sv = self.state_variables.get(Utils.ipv6_bytes_to_hex_formatted(rhit),
@@ -2276,7 +2276,7 @@ class HIPLib():
                 cipher_key = sa_record.get_aes_key();
                 src        = sa_record.get_src();
                 dst        = sa_record.get_dst();
-                iv         = list(Utils.generate_random(cipher.BLOCK_SIZE));
+                iv         = Utils.generate_random(cipher.BLOCK_SIZE);
                 sa_record.increment_sequence();
 
                 """
@@ -2291,7 +2291,7 @@ class HIPLib():
                 padded_data = IPSec.IPSecUtils.pad(cipher.BLOCK_SIZE, data, 0x0);
                 #logging.debug("Length of the padded data %d" % (len(padded_data)));
 
-                encrypted_data = cipher.encrypt(cipher_key, bytearray(iv), bytearray(padded_data));
+                encrypted_data = cipher.encrypt(cipher_key, iv, padded_data);
                 
                 """
                 logging.debug("Padded data");
@@ -2305,7 +2305,7 @@ class HIPLib():
                 ip_sec_packet = IPSec.IPSecPacket();
                 ip_sec_packet.set_spi(spi);
                 ip_sec_packet.set_sequence(seq);
-                ip_sec_packet.add_payload(iv + list(encrypted_data));
+                ip_sec_packet.add_payload(iv + encrypted_data);
 
                 #logging.debug("Calculating ICV over IPSec packet");
                 #logging.debug(list(ip_sec_packet.get_byte_buffer()));
@@ -2315,7 +2315,7 @@ class HIPLib():
                 #logging.debug(bytearray(icv))
                 #logging.debug("--------------------------------------------")
 
-                ip_sec_packet.add_payload(list(icv));
+                ip_sec_packet.add_payload(icv);
 
                 # Send ESP packet to destination
                 ipv4_packet = IPv4.IPv4Packet();
@@ -2405,7 +2405,7 @@ class HIPLib():
             hip_close_packet.set_length(HIP.HIP_DEFAULT_PACKET_LENGTH);
 
             echo_param = HIP.EchoRequestSignedParameter();
-            echo_param.add_opaque_data(list(Utils.generate_random(4)));
+            echo_param.add_opaque_data(Utils.generate_random(4));
             hip_close_packet.add_parameter(echo_param);
 
             mac_param = HIP.MACParameter();
@@ -2519,7 +2519,7 @@ class HIPLib():
                     hip_close_packet.set_length(HIP.HIP_DEFAULT_PACKET_LENGTH);
 
                     echo_param = HIP.EchoRequestSignedParameter();
-                    echo_param.add_opaque_data(list(Utils.generate_random(4)));
+                    echo_param.add_opaque_data(Utils.generate_random(4));
                     hip_close_packet.add_parameter(echo_param);
 
                     mac_param = HIP.MACParameter();
@@ -2787,7 +2787,7 @@ class HIPLib():
                     hip_close_packet.set_length(HIP.HIP_DEFAULT_PACKET_LENGTH);
 
                     echo_param = HIP.EchoRequestSignedParameter();
-                    echo_param.add_opaque_data(list(Utils.generate_random(4)));
+                    echo_param.add_opaque_data(Utils.generate_random(4));
                     hip_close_packet.add_parameter(echo_param);
 
                     mac_param = HIP.MACParameter();
