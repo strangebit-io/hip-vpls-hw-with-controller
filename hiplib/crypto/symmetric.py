@@ -17,6 +17,23 @@
 
 from Crypto.Cipher import AES
 
+import ctypes
+from ctypes import cdll
+from array import array
+
+lib = cdll.LoadLibrary('./aeslib.so')
+
+class Aes(ctypes.Structure):
+    pass
+
+lib.freeme.argtypes = ctypes.POINTER(ctypes.c_ubyte),
+lib.AES256.argtypes = ctypes.POINTER(ctypes.c_ubyte), 
+lib.AES256.restype = ctypes.c_void_p #ctypes.POINTER(Aes)
+lib.AES256EncryptBlock.argtypes = ctypes.c_void_p, ctypes.c_int, ctypes.POINTER(ctypes.c_ubyte), ctypes.POINTER(ctypes.c_ubyte)
+lib.AES256EncryptBlock.restype = ctypes.POINTER(ctypes.c_ubyte)
+lib.AES256DecryptBlock.argtypes = ctypes.c_void_p, ctypes.c_int, ctypes.POINTER(ctypes.c_ubyte), ctypes.POINTER(ctypes.c_ubyte)
+lib.AES256DecryptBlock.restype = ctypes.POINTER(ctypes.c_ubyte)
+
 class SymmetricCrypto():
 	BLOCK_SIZE = 0x0;
 	KEY_SIZE_BITS = 0x0;
@@ -99,6 +116,27 @@ class AES128CBCCipher(SymmetricCrypto):
 		cipher = AES.new(key, AES128CBCCipher.MODE_CBC, iv);
 		return self.unpad(cipher.decrypt(data));
 
+"""
+class AES256CBCCipher(SymmetricCrypto):
+
+	KEY_SIZE_BITS = 0x20;
+	MODE_CBC = AES.MODE_CBC;
+	BLOCK_SIZE = AES.block_size;
+	ALG_ID = 0x4;
+	
+	def __init__(self):
+		pass
+
+	def encrypt(self, key, iv, data):
+		cipher = AES.new(key, AES256CBCCipher.MODE_CBC, iv);
+		return cipher.encrypt(self.pad(data, AES256CBCCipher.BLOCK_SIZE));
+
+	def decrypt(self, key, iv, data):
+		cipher = AES.new(key, AES256CBCCipher.MODE_CBC, iv);
+		return self.unpad(cipher.decrypt(data));
+"""
+
+"""Hardware accelerate AES256 encryption routines"""
 class AES256CBCCipher(SymmetricCrypto):
 
 	KEY_SIZE_BITS = 0x20;
@@ -116,12 +154,42 @@ class AES256CBCCipher(SymmetricCrypto):
 		"""
 		Encryptes the plaintext using
 		"""
-		cipher = AES.new(key, AES256CBCCipher.MODE_CBC, iv);
-		return cipher.encrypt(self.pad(data, AES256CBCCipher.BLOCK_SIZE));
+		#cipher = AES.new(key, AES256CBCCipher.MODE_CBC, iv);
+		#return cipher.encrypt(self.pad(data, AES256CBCCipher.BLOCK_SIZE));
+		v = array('I', key);
+		addr, count = v.buffer_info();
+		pkey = ctypes.cast(addr, ctypes.POINTER(ctypes.c_ubyte))
+		obj = lib.AES256(pkey)
+
+		v = array('I', data);
+		addr, count = v.buffer_info();
+		pdata = ctypes.cast(addr, ctypes.POINTER(ctypes.c_ubyte))
+		v = array('I', iv);
+		addr, count = v.buffer_info();
+		piv = ctypes.cast(addr, ctypes.POINTER(ctypes.c_ubyte))
+		addr = lib.AES256EncryptBlock(obj, len(data), pdata, piv)
+		ciphertext = ctypes.string_at(addr, len(data))
+		lib.freeme(addr);
+		return ciphertext
 
 	def decrypt(self, key, iv, data):
 		"""
 		This method decryptes the ciphertext
 		"""
-		cipher = AES.new(key, AES256CBCCipher.MODE_CBC, iv);
-		return self.unpad(cipher.decrypt(data));
+		#cipher = AES.new(key, AES256CBCCipher.MODE_CBC, iv);
+		#return self.unpad(cipher.decrypt(data));
+		v = array('I', key);
+		addr, count = v.buffer_info();
+		pkey = ctypes.cast(addr, ctypes.POINTER(ctypes.c_ubyte))
+		obj = lib.AES256(pkey)
+
+		v = array('I', data);
+		addr, count = v.buffer_info();
+		pdata = ctypes.cast(addr, ctypes.POINTER(ctypes.c_ubyte))
+		v = array('I', iv);
+		addr, count = v.buffer_info();
+		piv = ctypes.cast(addr, ctypes.POINTER(ctypes.c_ubyte))
+		addr = lib.AES256DecryptBlock(obj, len(data), pdata, piv)
+		plaintext = ctypes.string_at(addr, len(data))
+		lib.freeme(addr);
+		return plaintext
