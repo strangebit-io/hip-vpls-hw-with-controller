@@ -252,7 +252,7 @@ class DHGroupListParameter(HIPParameter):
 			self.set_length(0);
 	def add_groups(self, groups):
 		self.set_length(len(groups));
-		self.buffer += groups;
+		self.buffer += bytearray(groups);
 		padding = (8 - len(self.buffer) % 8) % 8;
 		self.buffer += bytearray([0] * padding);
 	def get_groups(self):
@@ -448,7 +448,7 @@ class HITSuitListParameter(HIPParameter):
 		if length > 0:
 			raise Exception("Suits were set already");
 		self.set_length(len(suits));
-		self.buffer += suits;
+		self.buffer += bytearray(suits);
 		padding = (8 - len(self.buffer) % 8) % 8;
 		self.buffer += bytearray([0] * padding);
 	def get_suits(self):

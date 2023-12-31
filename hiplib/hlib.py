@@ -597,7 +597,7 @@ class HIPLib():
                     hip_state.unassociated();
                     return [];
 
-                buf = [];
+                buf = bytearray([]);
 
                 if r1_counter_param:
                     buf += r1_counter_param.get_byte_buffer();
@@ -1501,13 +1501,13 @@ class HIPLib():
 
                 hip_r2_packet.add_parameter(esp_info_param);
 
-                if hmac.digest(hip_r2_packet.get_buffer())) != hmac_param.get_hmac():
+                if hmac.digest(hip_r2_packet.get_buffer()) != hmac_param.get_hmac():
                     logging.critical("Invalid HMAC. Dropping the packet");
                     return [];
                 else:
                     logging.debug("HMAC is ok. return with signature");
 
-                buf = [];
+                buf = bytearray([]);
                 hip_r2_packet = HIP.R2Packet();
                 hip_r2_packet.set_senders_hit(ihit);
                 hip_r2_packet.set_receivers_hit(rhit);
@@ -1683,7 +1683,7 @@ class HIPLib():
                 hip_update_packet.set_length(HIP.HIP_DEFAULT_PACKET_LENGTH);
 
                 # Compute HMAC here
-                buf = [];
+                buf = bytearray([]);
                 if ack_param:
                     buf += ack_param.get_byte_buffer();
                 if seq_param:
@@ -1716,7 +1716,7 @@ class HIPLib():
                 hip_update_packet.set_version(HIP.HIP_VERSION);
                 hip_update_packet.set_length(HIP.HIP_DEFAULT_PACKET_LENGTH);
 
-                buf = [];
+                buf = bytearray([]);
                 if ack_param:
                     buf += ack_param.get_byte_buffer();
                 if seq_param:
@@ -1892,7 +1892,7 @@ class HIPLib():
                 hip_close_packet.set_length(HIP.HIP_DEFAULT_PACKET_LENGTH);
 
                 # Compute HMAC here
-                buf = [];
+                buf = bytearray([]);
                 buf += echo_param.get_byte_buffer();				
 
                 original_length = hip_close_packet.get_length();
@@ -1926,7 +1926,7 @@ class HIPLib():
                 hip_close_packet.set_version(HIP.HIP_VERSION);
                 hip_close_packet.set_length(HIP.HIP_DEFAULT_PACKET_LENGTH);
 
-                buf = [];
+                buf = bytearray([]);
                 buf += echo_param.get_byte_buffer();
                 buf += mac_param.get_byte_buffer();
 
@@ -2036,7 +2036,7 @@ class HIPLib():
         This routine is responsible for reading IPSec packets
         from the raw socket
         """
-        logging.debug("Processing IPSec packet");
+        #logging.debug("Processing IPSec packet");
 
         try:
             #buf           = bytearray(ip_sec_socket.recv(2*MTU));

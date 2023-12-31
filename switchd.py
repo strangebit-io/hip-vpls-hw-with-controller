@@ -72,7 +72,7 @@ import copy
 
 # Configure logging to console and file
 logging.basicConfig(
-    level=logging.CRITICAL,
+    level=logging.DEBUG,
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[
         #logging.FileHandler("hipls.log")#,
@@ -209,5 +209,6 @@ def run_swtich():
         except Exception as e:
             logging.critical("Exception occured while processing HIP packets in maintenance loop")
             logging.critical(e);
+            sleep(1)
 
 run_swtich()

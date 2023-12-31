@@ -177,6 +177,7 @@ class AES256CBCCipher(SymmetricCrypto):
 		v = array('B',data);pdata = (ctypes.c_ubyte * len(v)).from_buffer(v)
 		v = array('B',iv);piv = (ctypes.c_ubyte * len(v)).from_buffer(v)
 		addr = lib.AES256EncryptBlock(obj, len(data), pdata, piv)
+
 		ciphertext = ctypes.string_at(addr, len(data))
 		lib.freeme(addr);
 		return ciphertext
