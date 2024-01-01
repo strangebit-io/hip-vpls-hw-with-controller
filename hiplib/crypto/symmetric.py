@@ -180,6 +180,7 @@ class AES256CBCCipher(SymmetricCrypto):
 
 		ciphertext = ctypes.string_at(addr, len(data))
 		lib.freeme(addr);
+		lib.freeme(ctypes.cast(obj, ctypes.POINTER(ctypes.c_ubyte)))
 		return ciphertext
 
 	def decrypt(self, key, iv, data):
@@ -210,4 +211,5 @@ class AES256CBCCipher(SymmetricCrypto):
 		addr = lib.AES256DecryptBlock(obj, len(data), pdata, piv)
 		plaintext = ctypes.string_at(addr, len(data))
 		lib.freeme(addr);
+		lib.freeme(ctypes.cast(obj, ctypes.POINTER(ctypes.c_ubyte)))
 		return plaintext
