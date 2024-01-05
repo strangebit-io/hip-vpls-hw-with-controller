@@ -2176,13 +2176,13 @@ class HIPLib():
                 logging.info("Resolving %s to IPv4 address" % Utils.ipv6_bytes_to_hex_formatted(rhit));
 
                 # Resolve the HIT code can be improved
-                if not self.hit_resolver.resolve(Utils.ipv6_bytes_to_hex_formatted(rhit)):
+                if not self.hit_resolver.resolve(Utils.ipv6_bytes_to_hex_formatted_resolver(rhit)):
                     logging.critical("Cannot resolve HIT to IPv4 address");
                     return [];
 
                 # Convert bytes to string representation of IPv6 address
                 dst_str = self.hit_resolver.resolve(
-                    Utils.ipv6_bytes_to_hex_formatted(rhit));
+                    Utils.ipv6_bytes_to_hex_formatted_resolver(rhit));
                 dst = Math.int_to_bytes(
                     Utils.ipv4_to_int(dst_str));
                 src = Math.int_to_bytes(
@@ -2256,11 +2256,11 @@ class HIPLib():
                 data        = frame.get_buffer();
 
                 if Utils.is_hit_smaller(rhit, ihit):
-                    sv = self.state_variables.get(Utils.ipv6_bytes_to_hex_formatted(rhit),
-                        Utils.ipv6_bytes_to_hex_formatted(ihit));
+                    sv = self.state_variables.get(rhit_str,
+                        ihit_str);
                 else:
-                    sv = self.state_variables.get(Utils.ipv6_bytes_to_hex_formatted(ihit),
-                        Utils.ipv6_bytes_to_hex_formatted(rhit));
+                    sv = self.state_variables.get(ihit_str,
+                        rhit_str);
                 sv.data_timeout = time.time() + self.config["general"]["UAL"];
 
                 # Get SA record and construct the ESP payload

@@ -229,12 +229,11 @@ class Utils():
 	def ipv6_to_bytes(address):
 		pass
 
+
 	@staticmethod
-	def ipv6_bytes_to_hex_formatted(address_bytes):
-		"""
-		Converts IPv6 bytes to a formatted string
-		"""
+	def ipv6_bytes_to_hex_formatted_resolver(address_bytes):
 		address = Utils.ipv6_bytes_to_hex(address_bytes);
+		
 		formatted = "";
 		c = 1;
 		for h in address:
@@ -244,6 +243,23 @@ class Utils():
 			c += 1;
 		return formatted.rstrip(":");
 
+	@staticmethod
+	def ipv6_bytes_to_hex_formatted(address_bytes):
+		"""
+		Converts IPv6 bytes to a formatted string
+		"""
+		address = Utils.ipv6_bytes_to_hex(address_bytes);
+		return address
+		"""
+		formatted = "";
+		c = 1;
+		for h in address:
+			formatted += h;
+			if c % 4 == 0:
+				formatted += ":"
+			c += 1;
+		return formatted.rstrip(":");
+		"""
 	@staticmethod
 	def ipv4_to_int(address):
 		"""
