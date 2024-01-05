@@ -45,10 +45,11 @@ class FIB():
         #dmac = hexlify(dmac).decode("ascii")
         dmac = int.from_bytes(dmac, byteorder="little")
         #logging.debug("Looking up by the destination MAC address")
-        if not self.fib_unicast.get(dmac, None):
+        hop = self.fib_unicast.get(dmac, None)
+        if not hop:
             return self.fib_broadcast;
         #logging.debug("Message found in the FIB database")
-        return [self.fib_unicast.get(dmac)];
+        return [hop];
             
     def set_next_hop(self, dmac, shit, rhit):
         # Broadcast address
