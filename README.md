@@ -73,10 +73,9 @@ Currently the performance is not production grade. We have got 40Mb/s in a simul
 
 We are currently working on performance of the solution.
 
-Run these commands on every HIP-switch to improve the performance.
 
-```
-/sbin/ethtool -K eth0 rx off tx off sg off 
-/sbin/ethtool -K eth1 rx off tx off sg off 
-```
+# Hardware accelerated AES256 encryption
+
+We have implemented hardware accelerated AES256 for the Nano PI R2S and have got x10 improvement in throughput.
+
 
