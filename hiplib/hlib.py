@@ -166,6 +166,9 @@ class HIPLib():
         if self.config["general"]["rekey_after_packets"] > ((2<<32)-1):
             self.config["general"]["rekey_after_packets"] = (2<<32)-1;
 
+    def get_own_hit(self):
+        return self.own_hit;
+
     def reload_config(self):
         self.firewall.load_rules(self.config["firewall"]["rules_file"])
         logging.info("Using hosts file to resolve HITS %s" % (self.config["resolver"]["hosts_file"]));
