@@ -201,7 +201,7 @@ class FirewallConfigurationPacket(ControllerPacket):
                                FIREWALL_CONFIGURATION_NUM_OFFSET + 
                                FIREWALL_CONFIGURATION_NUM_LENGTH + 
                                FIREWALL_CONFIGURATION_HIT_LENGTH * (2 * i + 2) + 
-                               FIREWALL_CONFIGURATION_RULE_LENGTH * i] = bytearray(rules[i]["hit1"])
+                               FIREWALL_CONFIGURATION_RULE_LENGTH * i] = bytearray(rules[i]["hit2"])
             self.buffer[FIREWALL_CONFIGURATION_NUM_OFFSET + 
                                FIREWALL_CONFIGURATION_NUM_LENGTH + 
                                FIREWALL_CONFIGURATION_HIT_LENGTH * (2 * i + 2) + 
@@ -328,4 +328,108 @@ class HostsConfigurationPacket(ControllerPacket):
                                 HOSTS_CONFIGURATION_IP_LENGTH * (i + 1) +
                                HOSTS_CONFIGURATION_HIT_LENGTH * (i + 1)] = bytearray(hosts[i]["ip"])    
     def get_buffer(self):
-        return self.buffer;        
+        return self.buffer;
+
+
+MESH_CONFIGURATION_TYPE = 2
+MESH_CONFIGURATION_TYPE_OFFSSET = 0
+MESH_CONFIGURATION_TYPE_LENGTH = 4
+MESH_CONFIGURATION_LENGTH_OFFSET = 4
+MESH_CONFIGURATION_LENGTH_LENGTH = 4
+MESH_CONFIGURATION_HMAC_OFFSET = 8
+MESH_CONFIGURATION_HMAC_LENGTH = 32
+MESH_CONFIGURATION_NONCE_OFFSET = 40
+MESH_CONFIGURATION_NONCE_LENGTH = 4
+MESH_CONFIGURATION_NUM_OFFSET = 44
+MESH_CONFIGURATION_NUM_LENGTH = 32
+MESH_CONFIGURATION_HIT_LENGTH = 16
+MESH_CONFIGURATION_RULE_LENGTH = 4
+
+class MeshConfigurationPacket(ControllerPacket):
+    def __init__(self, buffer):
+        if not buffer:
+            self.buffer = bytearray([0] * (MESH_CONFIGURATION_TYPE_LENGTH +
+                                           MESH_CONFIGURATION_LENGTH_LENGTH +
+                                           MESH_CONFIGURATION_HMAC_LENGTH +
+                                           MESH_CONFIGURATION_NONCE_LENGTH))
+        else:
+            self.buffer = buffer
+    def set_packet_type(self, type):
+        self.buffer[MESH_CONFIGURATION_TYPE_OFFSSET] = (type >> 24) & 0xFF;
+        self.buffer[MESH_CONFIGURATION_TYPE_OFFSSET + 1] = (type >> 16) & 0xFF;
+        self.buffer[MESH_CONFIGURATION_TYPE_OFFSSET + 2] = (type >> 8) & 0xFF;
+        self.buffer[MESH_CONFIGURATION_TYPE_OFFSSET + 3] = type & 0xFF;
+    def get_packet_type(self):
+        type = 0
+        type = self.buffer[MESH_CONFIGURATION_TYPE_OFFSSET]
+        type = (type << 8) | self.buffer[MESH_CONFIGURATION_TYPE_OFFSSET + 1];
+        type = (type << 8) | self.buffer[MESH_CONFIGURATION_TYPE_OFFSSET + 2];
+        type = (type << 8) | self.buffer[MESH_CONFIGURATION_TYPE_OFFSSET + 3];
+        return type
+    def set_packet_length(self, length):
+        self.buffer[MESH_CONFIGURATION_LENGTH_OFFSET] = (length >> 24) & 0xFF;
+        self.buffer[MESH_CONFIGURATION_LENGTH_OFFSET + 1] = (length >> 16) & 0xFF;
+        self.buffer[MESH_CONFIGURATION_LENGTH_OFFSET + 2] = (length >> 8) & 0xFF;
+        self.buffer[MESH_CONFIGURATION_LENGTH_OFFSET + 3] = length & 0xFF;
+    def get_packet_type(self):
+        length = 0
+        length = self.buffer[MESH_CONFIGURATION_LENGTH_OFFSET]
+        length = (length << 8) | self.buffer[MESH_CONFIGURATION_LENGTH_OFFSET + 2];
+        length = (length << 8) | self.buffer[MESH_CONFIGURATION_LENGTH_OFFSET + 1];
+        length = (length << 8) | self.buffer[MESH_CONFIGURATION_LENGTH_OFFSET + 3];
+        return length
+    def set_hmac(self, hmac):
+        self.buffer[MESH_CONFIGURATION_HMAC_OFFSET:MESH_CONFIGURATION_HMAC_OFFSET + MESH_CONFIGURATION_HMAC_LENGTH] = hmac
+    def get_hmac(self):
+        return self.buffer[MESH_CONFIGURATION_HMAC_OFFSET:MESH_CONFIGURATION_HMAC_OFFSET + MESH_CONFIGURATION_HMAC_LENGTH]
+    def set_nonce(self, nonce):
+        self.buffer[MESH_CONFIGURATION_NONCE_OFFSET:MESH_CONFIGURATION_NONCE_OFFSET + MESH_CONFIGURATION_NONCE_LENGTH] = nonce
+    def get_nonce(self):
+        return self.buffer[MESH_CONFIGURATION_NONCE_OFFSET:MESH_CONFIGURATION_NONCE_OFFSET + MESH_CONFIGURATION_NONCE_LENGTH]
+    def get_mesh(self):
+        num = (self.buffer[MESH_CONFIGURATION_NUM_OFFSET] >> 24) & 0xFF
+        num = num | ((self.buffer[MESH_CONFIGURATION_NUM_OFFSET + 1] >> 16) & 0xFF)
+        num = num | ((self.buffer[MESH_CONFIGURATION_NUM_OFFSET + 2] >> 8) & 0xFF)
+        num = num | ((self.buffer[MESH_CONFIGURATION_NUM_OFFSET + 3]) & 0xFF)
+        mesh = []
+        for i in range(0, num):
+            hit1 = self.buffer[MESH_CONFIGURATION_NUM_OFFSET + 
+                               MESH_CONFIGURATION_NUM_LENGTH + 
+                               (MESH_CONFIGURATION_HIT_LENGTH * 2 * i):
+                               MESH_CONFIGURATION_NUM_OFFSET + 
+                               MESH_CONFIGURATION_NUM_LENGTH + 
+                               MESH_CONFIGURATION_HIT_LENGTH * (2 * i + 1)].decode()
+            hit2 = self.buffer[MESH_CONFIGURATION_NUM_OFFSET + 
+                               MESH_CONFIGURATION_NUM_LENGTH + 
+                               MESH_CONFIGURATION_HIT_LENGTH * (2 * i + 1):
+                               MESH_CONFIGURATION_NUM_OFFSET + 
+                               (MESH_CONFIGURATION_NUM_LENGTH + 
+                                MESH_CONFIGURATION_HIT_LENGTH * (2 * i + 2))].decode()
+            
+            mesh.append({
+                "hit1": hit1,
+                "hit2": hit2
+            })
+        return mesh
+    
+    def set_rules(self, rules, num):
+        self.buffer[MESH_CONFIGURATION_NUM_OFFSET] = (num >> 24) & 0xFF
+        self.buffer[MESH_CONFIGURATION_NUM_OFFSET + 1] = (num >> 16) & 0xFF
+        self.buffer[MESH_CONFIGURATION_NUM_OFFSET + 2] = (num >> 8) & 0xFF
+        self.buffer[MESH_CONFIGURATION_NUM_OFFSET + 3] =  num & 0xFF
+        for i in range(0, num):
+            self.buffer[MESH_CONFIGURATION_NUM_OFFSET + 
+                               MESH_CONFIGURATION_NUM_LENGTH + 
+                               MESH_CONFIGURATION_HIT_LENGTH * 2 * i: 
+                               MESH_CONFIGURATION_NUM_OFFSET + 
+                               MESH_CONFIGURATION_NUM_LENGTH + 
+                               MESH_CONFIGURATION_HIT_LENGTH * (2 * i + 1)] = bytearray(rules[i]["hit1"])
+            self.buffer[MESH_CONFIGURATION_NUM_OFFSET + 
+                               MESH_CONFIGURATION_NUM_LENGTH + 
+                               MESH_CONFIGURATION_HIT_LENGTH * (2 * i + 1):
+                               MESH_CONFIGURATION_NUM_OFFSET + 
+                               MESH_CONFIGURATION_NUM_LENGTH + 
+                               MESH_CONFIGURATION_HIT_LENGTH * (2 * i + 2)] = bytearray(rules[i]["hit2"])
+            
+    def get_buffer(self):
+        return self.buffer;
