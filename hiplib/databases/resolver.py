@@ -26,6 +26,9 @@ class Resolver():
 
 class HostsFileResolver(Resolver):
 	def __init__(self, filename=None):
+		self.load_records(filename)
+
+	def load_records(self, filename = None):
 		fh = open(filename);
 		self.mapping = dict();
 		lines = fh.readlines();
@@ -36,5 +39,6 @@ class HostsFileResolver(Resolver):
 				continue;
 			self.mapping[record[0].rstrip()] = record[1];
 			logging.info("%s %s", record[0].rstrip(), record[1]);
+	
 	def resolve(self, hit):
 		return self.mapping.get(hit, None);

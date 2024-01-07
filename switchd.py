@@ -67,6 +67,10 @@ from hiplib.config import config as hip_config
 # Import switch FIB
 from switchfabric import FIB
 
+# Network stuff
+import socket
+import ssl
+
 # Copy routines
 import copy
 
@@ -106,6 +110,23 @@ def onclose():
     packets = hiplib.exit_handler()
     for (packet, dest) in packets:
         hip_socket.sendto(packet, dest)
+
+def open_controller_socket():
+    ctx = ssl.create_default_context();
+    ctx.load_verify_locations(hip_config.config["controller"]["ca_cert"]);
+    ip = socket.gethostbyname(hip_config.config["controller"]["controller_host_name"])
+    sock = socket.create_connection((ip, hip_config.config["controller"]["controller_port"]));
+    ctx.check_hostname = True;
+    secure_socket = ctx.wrap_socket(sock, server_hostname=hip_config.config["controller"]["controller_host_name"], 
+                                    server_side=False);
+    return secure_socket
+
+def config_loop():
+    
+    socket = open_controller_socket();
+    
+    while True:
+        pass
 
 def hip_loop():
     while True:

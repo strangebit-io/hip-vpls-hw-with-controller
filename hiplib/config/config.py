@@ -2,7 +2,7 @@ config = {
 	"swtich": {
 		"l2interface": "eth1",
 		"mesh": "hiplib/config/mesh",
-                "source_ip": "1.1.1.5"
+		"source_ip": "1.1.1.5"
 	},
 	"network": {
 		"tun_name": "hip0",                                    # Interface name
@@ -50,6 +50,17 @@ config = {
 	},
 	"firewall": {
 		"rules_file": "hiplib/config/rules"
+	},
+    "controller": {
+        "address": "1.1.1.2",                                  # Controller IP address
+        "controller_host_name": "hip-vpls-controller.strangebit.io",      # Controller FQDN
+        "controller_port": 5000,
+        "ca_cert": "hiplib/config/ca.pem",                     # CA certificate (self-generated public key)
+        "update_interval": 20,                                 # Configuration update interval
+        "heartbeat_interval": 5,                               # How frequently to send heartbeat packets
+        "reload_interval": 10,                                 # Configuration reload interval
+        "master_secret": "1234567890ABCDEF1234567890ABCDEF",   # Master secret for authentication with the controller MUST BE 256 bits long
+        "switch_name": "hip-switch-idaho.strangebit.io"        # HIP switch name
 	}
 }
 

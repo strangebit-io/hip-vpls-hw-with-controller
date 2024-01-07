@@ -20,6 +20,10 @@ class FIB():
     def __init__(self, file):
         self.fib_broadcast = [];
         self.fib_unicast = {};
+        self.load_mesh(file);
+    
+    def load_mesh(self, file):
+        self.fib_broadcast = [];
         fd = open(file, "r")
         pairs = fd.readlines();
         for mesh_pair in pairs:
@@ -29,6 +33,7 @@ class FIB():
             ihit = bytes.fromhex(ihit)
             rhit = bytes.fromhex(rhit)
             self.fib_broadcast.append((ihit, rhit));
+    
     def get_next_hop(self, dmac):
         
         # Broadcast address
