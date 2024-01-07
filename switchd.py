@@ -24,6 +24,8 @@ __email__ = "dmitriy.kuptsov@gmail.com"
 __status__ = "development"
 
 # Import the needed libraries
+# OS library
+import os
 # Stacktrace
 import traceback
 # Sockets
@@ -50,6 +52,12 @@ from binascii import hexlify
 # Import HIP library
 from hiplib import hlib
 
+# Utilities
+from hiplib.utils import misc
+
+# Crypto stuff
+from hiplib.crypto import digest
+
 from hiplib.hlib import HIPLib
 
 # HIP related packets
@@ -62,6 +70,8 @@ from hiplib.packets import IPv6
 from hiplib.packets import IPv4
 # Ethernet frame
 from hiplib.packets import Ethernet
+# Controller packets
+from hiplib.packets import Controller
 # Configuration
 from hiplib.config import config as hip_config
 # Import switch FIB
@@ -70,6 +80,9 @@ from switchfabric import FIB
 # Network stuff
 import socket
 import ssl
+
+# HIP controller lock
+hip_config_socket_lock = threading.Lock()
 
 # Copy routines
 import copy
@@ -106,6 +119,8 @@ ether_socket.bind((hip_config.config["swtich"]["l2interface"], 0))
 # Initialize FIB
 fib = FIB(hip_config.config["swtich"]["mesh"])
 
+hip_config_socket = None
+
 def onclose():
     packets = hiplib.exit_handler()
     for (packet, dest) in packets:
@@ -122,11 +137,49 @@ def open_controller_socket():
     return secure_socket
 
 def config_loop():
-    
-    socket = open_controller_socket();
-    
+    try:
+        hip_config_socket_lock.acquire();
+        if not hip_config_socket:
+            hip_config_socket = open_controller_socket();
+    finally:
+        hip_config_socket_lock.release();
     while True:
+        sleep(1);
         pass
+
+def heart_beat_loop():
+    try:
+        hip_config_socket_lock.acquire();
+        if not hip_config_socket:
+            hip_config_socket = open_controller_socket();
+    except:
+        pass
+    finally:
+        hip_config_socket_lock.release();
+    while True:
+        nonce = os.urandom(4);
+        hit = hiplib.get_own_hit();
+        ip = misc.Utils.ipv4_to_int(hip_config.config["swtich"]["source_ip"]);
+        heartbeat = Controller.HeartbeatPacket();
+        heartbeat.set_packet_type(Controller.HEART_BEAT_TYPE);
+        heartbeat.set_hit(hit);
+        heartbeat.set_ip(ip);
+        heartbeat.set_nonce(nonce);
+        buf = heartbeat.get_buffer();
+        hmac = digest.SHA256HMAC(hip_config.config["controller"]["master_secret"])
+        digest = hmac.digest(buf)
+        heartbeat.set_hmac(digest)
+        bytes_sent = hip_config_socket.send(heartbeat.get_buffer());
+        if bytes_sent == 0:
+            try:
+                hip_config_socket_lock.acquire();
+                if not hip_config_socket:
+                    hip_config_socket = open_controller_socket();
+            except:
+                pass
+            finally:
+                hip_config_socket_lock.release();
+        sleep(hip_config.config["controller"]["heartbeat_interval"]);
 
 def hip_loop():
     while True:
@@ -212,12 +265,14 @@ atexit.register(onclose);
 hip_th_loop = threading.Thread(target = hip_loop, args = (), daemon = True);
 ip_sec_th_loop = threading.Thread(target = ip_sec_loop, args = (), daemon = True);
 ether_if_th_loop = threading.Thread(target = ether_loop, args = (), daemon = True);
+heart_beat_th_loop = threading.Thread(target = heart_beat_loop, args = (), daemon = True)
 
 logging.info("Starting the CuteHIP");
 
 hip_th_loop.start();
 ip_sec_th_loop.start();
 ether_if_th_loop.start();
+heart_beat_th_loop.start();
 
 def run_swtich():
     while True:
