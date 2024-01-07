@@ -191,7 +191,7 @@ class FirewallConfigurationPacket(ControllerPacket):
                                FIREWALL_CONFIGURATION_NUM_OFFSET + 
                                FIREWALL_CONFIGURATION_NUM_LENGTH + 
                                FIREWALL_CONFIGURATION_HIT_LENGTH * (2 * i + 1) + 
-                               FIREWALL_CONFIGURATION_RULL_LENGTH * i] = bytearray(rules[i]["hit1"], encoding = "ascii")
+                               FIREWALL_CONFIGURATION_RULL_LENGTH * i] = bytearray(rules[i]["hit1"])
             self.buffer[FIREWALL_CONFIGURATION_NUM_OFFSET + 
                                FIREWALL_CONFIGURATION_NUM_LENGTH + 
                                FIREWALL_CONFIGURATION_HIT_LENGTH * (2 * i + 1) + 
@@ -199,7 +199,7 @@ class FirewallConfigurationPacket(ControllerPacket):
                                FIREWALL_CONFIGURATION_NUM_OFFSET + 
                                FIREWALL_CONFIGURATION_NUM_LENGTH + 
                                FIREWALL_CONFIGURATION_HIT_LENGTH * (2 * i + 2) + 
-                               FIREWALL_CONFIGURATION_RULL_LENGTH * i] = bytearray(rules[i]["hit1"], encoding = "ascii")
+                               FIREWALL_CONFIGURATION_RULL_LENGTH * i] = bytearray(rules[i]["hit1"])
             self.buffer[FIREWALL_CONFIGURATION_NUM_OFFSET + 
                                FIREWALL_CONFIGURATION_NUM_LENGTH + 
                                FIREWALL_CONFIGURATION_HIT_LENGTH * (2 * i + 2) + 
@@ -314,7 +314,7 @@ class HostsConfigurationPacket(ControllerPacket):
                                HOSTS_CONFIGURATION_NUM_OFFSET + 
                                HOSTS_CONFIGURATION_NUM_LENGTH + 
                                HOSTS_CONFIGURATION_IP_LENGTH * i +
-                               HOSTS_CONFIGURATION_HIT_LENGTH * (i + 1)] = bytearray(hosts[i]["hit"], encoding = "ascii")
+                               HOSTS_CONFIGURATION_HIT_LENGTH * (i + 1)] = bytearray(hosts[i]["hit"])
             self.buffer[HOSTS_CONFIGURATION_NUM_OFFSET + 
                                HOSTS_CONFIGURATION_NUM_LENGTH + 
                                 HOSTS_CONFIGURATION_IP_LENGTH * i +
@@ -322,4 +322,4 @@ class HostsConfigurationPacket(ControllerPacket):
                                HOSTS_CONFIGURATION_NUM_OFFSET + 
                                HOSTS_CONFIGURATION_NUM_LENGTH + 
                                 HOSTS_CONFIGURATION_IP_LENGTH * (i + 1) +
-                               HOSTS_CONFIGURATION_HIT_LENGTH * (i + 1)] = bytearray(hosts[i]["ip"], encoding = "ascii")            
+                               HOSTS_CONFIGURATION_HIT_LENGTH * (i + 1)] = bytearray(hosts[i]["ip"])            
