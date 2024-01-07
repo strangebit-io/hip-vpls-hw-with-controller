@@ -25,12 +25,12 @@ HEART_BEAT_TYPE_LENGTH = 4
 HEART_BEAT_LENGTH_OFFSET = 4
 HEART_BEAT_LENGTH_LENGTH = 4
 HEART_BEAT_HMAC_OFFSET = 8
-HEART_BEAT_HMAC_LENGTH = 16
-HEART_BEAT_NONCE_OFFSET = 24
+HEART_BEAT_HMAC_LENGTH = 32
+HEART_BEAT_NONCE_OFFSET = 40
 HEART_BEAT_NONCE_LENGTH = 4
-HEART_BEAT_HIT_OFFSET = 28
+HEART_BEAT_HIT_OFFSET = 44
 HEART_BEAT_HIT_LENGTH = 16
-HEART_BEAT_IP_OFFSET = 44
+HEART_BEAT_IP_OFFSET = 60
 HEART_BEAT_IP_LENGTH = 4
 
 class HeartbeatPacket(ControllerPacket):
@@ -84,6 +84,8 @@ class HeartbeatPacket(ControllerPacket):
         self.buffer[HEART_BEAT_IP_OFFSET:HEART_BEAT_IP_OFFSET + HEART_BEAT_IP_LENGTH] = ip
     def get_ip(self):
         return self.buffer[HEART_BEAT_IP_OFFSET:HEART_BEAT_IP_OFFSET + HEART_BEAT_IP_LENGTH]
+    def get_buffer(self):
+        return self.buffer;
     
 FIREWALL_CONFIGURATION_TYPE = 2
 FIREWALL_CONFIGURATION_TYPE_OFFSSET = 0
@@ -91,13 +93,13 @@ FIREWALL_CONFIGURATION_TYPE_LENGTH = 4
 FIREWALL_CONFIGURATION_LENGTH_OFFSET = 4
 FIREWALL_CONFIGURATION_LENGTH_LENGTH = 4
 FIREWALL_CONFIGURATION_HMAC_OFFSET = 8
-FIREWALL_CONFIGURATION_HMAC_LENGTH = 16
-FIREWALL_CONFIGURATION_NONCE_OFFSET = 24
+FIREWALL_CONFIGURATION_HMAC_LENGTH = 32
+FIREWALL_CONFIGURATION_NONCE_OFFSET = 40
 FIREWALL_CONFIGURATION_NONCE_LENGTH = 4
-FIREWALL_CONFIGURATION_NUM_OFFSET = 28
+FIREWALL_CONFIGURATION_NUM_OFFSET = 44
 FIREWALL_CONFIGURATION_NUM_LENGTH = 32
 FIREWALL_CONFIGURATION_HIT_LENGTH = 16
-FIREWALL_CONFIGURATION_RULL_LENGTH = 4
+FIREWALL_CONFIGURATION_RULE_LENGTH = 4
 
 class FirewallConfigurationPacket(ControllerPacket):
     def __init__(self, buffer):
@@ -187,35 +189,37 @@ class FirewallConfigurationPacket(ControllerPacket):
             self.buffer[FIREWALL_CONFIGURATION_NUM_OFFSET + 
                                FIREWALL_CONFIGURATION_NUM_LENGTH + 
                                FIREWALL_CONFIGURATION_HIT_LENGTH * 2 * i + 
-                               FIREWALL_CONFIGURATION_RULL_LENGTH * i:
+                               FIREWALL_CONFIGURATION_RULE_LENGTH * i:
                                FIREWALL_CONFIGURATION_NUM_OFFSET + 
                                FIREWALL_CONFIGURATION_NUM_LENGTH + 
                                FIREWALL_CONFIGURATION_HIT_LENGTH * (2 * i + 1) + 
-                               FIREWALL_CONFIGURATION_RULL_LENGTH * i] = bytearray(rules[i]["hit1"])
+                               FIREWALL_CONFIGURATION_RULE_LENGTH * i] = bytearray(rules[i]["hit1"])
             self.buffer[FIREWALL_CONFIGURATION_NUM_OFFSET + 
                                FIREWALL_CONFIGURATION_NUM_LENGTH + 
                                FIREWALL_CONFIGURATION_HIT_LENGTH * (2 * i + 1) + 
-                               FIREWALL_CONFIGURATION_RULL_LENGTH * i:
+                               FIREWALL_CONFIGURATION_RULE_LENGTH * i:
                                FIREWALL_CONFIGURATION_NUM_OFFSET + 
                                FIREWALL_CONFIGURATION_NUM_LENGTH + 
                                FIREWALL_CONFIGURATION_HIT_LENGTH * (2 * i + 2) + 
-                               FIREWALL_CONFIGURATION_RULL_LENGTH * i] = bytearray(rules[i]["hit1"])
+                               FIREWALL_CONFIGURATION_RULE_LENGTH * i] = bytearray(rules[i]["hit1"])
             self.buffer[FIREWALL_CONFIGURATION_NUM_OFFSET + 
                                FIREWALL_CONFIGURATION_NUM_LENGTH + 
                                FIREWALL_CONFIGURATION_HIT_LENGTH * (2 * i + 2) + 
-                               FIREWALL_CONFIGURATION_RULL_LENGTH * i] = (rules[i]["rule"] >> 24) & 0xFF 
+                               FIREWALL_CONFIGURATION_RULE_LENGTH * i] = (rules[i]["rule"] >> 24) & 0xFF 
             self.buffer[FIREWALL_CONFIGURATION_NUM_OFFSET + 
                                FIREWALL_CONFIGURATION_NUM_LENGTH + 
                                FIREWALL_CONFIGURATION_HIT_LENGTH * (2 * i + 2) +
-                               FIREWALL_CONFIGURATION_RULL_LENGTH * i + 1]  = (rules[i]["rule"]<< 16) & 0xFF
+                               FIREWALL_CONFIGURATION_RULE_LENGTH * i + 1]  = (rules[i]["rule"]<< 16) & 0xFF
             self.buffer[FIREWALL_CONFIGURATION_NUM_OFFSET + 
                                FIREWALL_CONFIGURATION_NUM_LENGTH + 
                                FIREWALL_CONFIGURATION_HIT_LENGTH * (2 * i + 2) + 
-                               FIREWALL_CONFIGURATION_RULL_LENGTH * i + 2]  = (rules[i]["rule"]<< 8) & 0xFF
+                               FIREWALL_CONFIGURATION_RULE_LENGTH * i + 2]  = (rules[i]["rule"]<< 8) & 0xFF
             self.buffer[FIREWALL_CONFIGURATION_NUM_OFFSET + 
                                FIREWALL_CONFIGURATION_NUM_LENGTH + 
                                FIREWALL_CONFIGURATION_HIT_LENGTH * (2 * i + 2) + 
-                               FIREWALL_CONFIGURATION_RULL_LENGTH * i + 3]  = rules[i]["rule"] & 0xFF
+                               FIREWALL_CONFIGURATION_RULE_LENGTH * i + 3]  = rules[i]["rule"] & 0xFF
+    def get_buffer(self):
+        return self.buffer;
 
 HOSTS_CONFIGURATION_TYPE = 3
 HOSTS_CONFIGURATION_TYPE_OFFSSET = 0
@@ -223,10 +227,10 @@ HOSTS_CONFIGURATION_TYPE_LENGTH = 4
 HOSTS_CONFIGURATION_LENGTH_OFFSET = 4
 HOSTS_CONFIGURATION_LENGTH_LENGTH = 4
 HOSTS_CONFIGURATION_HMAC_OFFSET = 8
-HOSTS_CONFIGURATION_HMAC_LENGTH = 16
-HOSTS_CONFIGURATION_NONCE_OFFSET = 24
+HOSTS_CONFIGURATION_HMAC_LENGTH = 32
+HOSTS_CONFIGURATION_NONCE_OFFSET = 40
 HOSTS_CONFIGURATION_NONCE_LENGTH = 4
-HOSTS_CONFIGURATION_NUM_OFFSET = 28
+HOSTS_CONFIGURATION_NUM_OFFSET = 44
 HOSTS_CONFIGURATION_NUM_LENGTH = 32
 HOSTS_CONFIGURATION_HIT_LENGTH = 16
 HOSTS_CONFIGURATION_IP_LENGTH = 4
@@ -322,4 +326,6 @@ class HostsConfigurationPacket(ControllerPacket):
                                HOSTS_CONFIGURATION_NUM_OFFSET + 
                                HOSTS_CONFIGURATION_NUM_LENGTH + 
                                 HOSTS_CONFIGURATION_IP_LENGTH * (i + 1) +
-                               HOSTS_CONFIGURATION_HIT_LENGTH * (i + 1)] = bytearray(hosts[i]["ip"])            
+                               HOSTS_CONFIGURATION_HIT_LENGTH * (i + 1)] = bytearray(hosts[i]["ip"])    
+    def get_buffer(self):
+        return self.buffer;        
