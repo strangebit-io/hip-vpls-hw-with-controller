@@ -151,28 +151,28 @@ class FirewallConfigurationPacket(ControllerPacket):
         for i in range(0, num):
             hit1 = self.buffer[FIREWALL_CONFIGURATION_NUM_OFFSET + 
                                FIREWALL_CONFIGURATION_NUM_LENGTH + 
-                               (FIREWALL_CONFIGURATION_HIT_LENGTH * i):
+                               (FIREWALL_CONFIGURATION_HIT_LENGTH * 2 * i):
                                FIREWALL_CONFIGURATION_NUM_OFFSET + 
                                FIREWALL_CONFIGURATION_NUM_LENGTH + 
-                               FIREWALL_CONFIGURATION_HIT_LENGTH * (i + 1)].decode()
+                               FIREWALL_CONFIGURATION_HIT_LENGTH * (2 * i + 1)].decode()
             hit2 = self.buffer[FIREWALL_CONFIGURATION_NUM_OFFSET + 
                                FIREWALL_CONFIGURATION_NUM_LENGTH + 
-                               FIREWALL_CONFIGURATION_HIT_LENGTH * (i + 1):
+                               FIREWALL_CONFIGURATION_HIT_LENGTH * (2 * i + 1):
                                FIREWALL_CONFIGURATION_NUM_OFFSET + 
                                (FIREWALL_CONFIGURATION_NUM_LENGTH + 
-                                FIREWALL_CONFIGURATION_HIT_LENGTH * (i + 2))].decode()
+                                FIREWALL_CONFIGURATION_HIT_LENGTH * (2 * i + 2))].decode()
             rule = (self.buffer[FIREWALL_CONFIGURATION_NUM_OFFSET + 
                                FIREWALL_CONFIGURATION_NUM_LENGTH + 
-                               FIREWALL_CONFIGURATION_HIT_LENGTH * (i + 2)] << 24) 
+                               FIREWALL_CONFIGURATION_HIT_LENGTH * (2 * i + 2)] << 24) 
             rule = (self.buffer[FIREWALL_CONFIGURATION_NUM_OFFSET + 
                                FIREWALL_CONFIGURATION_NUM_LENGTH + 
-                               FIREWALL_CONFIGURATION_HIT_LENGTH * (i + 2) + 1] << 16) | rule
+                               FIREWALL_CONFIGURATION_HIT_LENGTH * (2 * i + 2) + 1] << 16) | rule
             rule = (self.buffer[FIREWALL_CONFIGURATION_NUM_OFFSET + 
                                FIREWALL_CONFIGURATION_NUM_LENGTH + 
-                               FIREWALL_CONFIGURATION_HIT_LENGTH * (i + 2) + 2] << 8) | rule
+                               FIREWALL_CONFIGURATION_HIT_LENGTH * (2 * i + 2) + 2] << 8) | rule
             rule = (self.buffer[FIREWALL_CONFIGURATION_NUM_OFFSET + 
                                FIREWALL_CONFIGURATION_NUM_LENGTH + 
-                               FIREWALL_CONFIGURATION_HIT_LENGTH * (i + 2) + 3]) | rule
+                               FIREWALL_CONFIGURATION_HIT_LENGTH * (2 * i + 2) + 3]) | rule
             rules.append({
                 "hit1": hit1,
                 "hit2": hit2,
