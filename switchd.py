@@ -127,6 +127,9 @@ def onclose():
         hip_socket.sendto(packet, dest)
 
 def open_controller_socket():
+    """
+    Conncects to controller in the cloud
+    """
     ctx = ssl.create_default_context();
     ctx.load_verify_locations(hip_config.config["controller"]["ca_cert"]);
     ip = socket.gethostbyname(hip_config.config["controller"]["controller_host_name"])
@@ -148,6 +151,10 @@ def config_loop():
         pass
 
 def heart_beat_loop():
+    """
+    Heart beat loop: 
+        send periodic registration messages to the cloud (this includes HIT and IP address)
+    """
     try:
         hip_config_socket_lock.acquire();
         if not hip_config_socket:
