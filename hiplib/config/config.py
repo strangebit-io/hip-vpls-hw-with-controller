@@ -60,7 +60,8 @@ config = {
         "heartbeat_interval": 5,                               # How frequently to send heartbeat packets
         "reload_interval": 10,                                 # Configuration reload interval
         "master_secret": "1234567890ABCDEF1234567890ABCDEF",   # Master secret for authentication with the controller MUST BE 256 bits long
-        "switch_name": "hip-switch-idaho.strangebit.io"        # HIP switch name
+        "switch_name": "hip-switch-idaho.strangebit.io",       # HIP switch name
+        "default_buffer": 1000
 	}
 }
 
