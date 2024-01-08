@@ -143,10 +143,10 @@ class FirewallConfigurationPacket(ControllerPacket):
     def get_nonce(self):
         return self.buffer[FIREWALL_CONFIGURATION_NONCE_OFFSET:FIREWALL_CONFIGURATION_NONCE_OFFSET + FIREWALL_CONFIGURATION_NONCE_LENGTH]
     def get_rules(self):
-        num = (self.buffer[FIREWALL_CONFIGURATION_NUM_OFFSET] >> 24) & 0xFF
-        num = num | ((self.buffer[FIREWALL_CONFIGURATION_NUM_OFFSET + 1] >> 16) & 0xFF)
-        num = num | ((self.buffer[FIREWALL_CONFIGURATION_NUM_OFFSET + 2] >> 8) & 0xFF)
-        num = num | ((self.buffer[FIREWALL_CONFIGURATION_NUM_OFFSET + 3]) & 0xFF)
+        num = self.buffer[FIREWALL_CONFIGURATION_NUM_OFFSET] & 0xFF
+        num = (num << 8) | (self.buffer[FIREWALL_CONFIGURATION_NUM_OFFSET + 1] & 0xFF)
+        num = (num << 8) | (self.buffer[FIREWALL_CONFIGURATION_NUM_OFFSET + 2] & 0xFF)
+        num = (num << 8) | (self.buffer[FIREWALL_CONFIGURATION_NUM_OFFSET + 3] & 0xFF)
         rules = []
         for i in range(0, num):
             hit1 = self.buffer[FIREWALL_CONFIGURATION_NUM_OFFSET + 
@@ -277,10 +277,10 @@ class HostsConfigurationPacket(ControllerPacket):
     def get_nonce(self):
         return self.buffer[HOSTS_CONFIGURATION_NONCE_OFFSET:HOSTS_CONFIGURATION_NONCE_OFFSET + HOSTS_CONFIGURATION_NONCE_LENGTH]
     def get_hosts(self):
-        num = (self.buffer[HOSTS_CONFIGURATION_NUM_OFFSET] >> 24) & 0xFF
-        num = num | ((self.buffer[HOSTS_CONFIGURATION_NUM_OFFSET + 1] >> 16) & 0xFF)
-        num = num | ((self.buffer[HOSTS_CONFIGURATION_NUM_OFFSET + 2] >> 8) & 0xFF)
-        num = num | ((self.buffer[HOSTS_CONFIGURATION_NUM_OFFSET + 3]) & 0xFF)
+        num = self.buffer[HOSTS_CONFIGURATION_NUM_OFFSET] & 0xFF
+        num = (num << 8) | (self.buffer[HOSTS_CONFIGURATION_NUM_OFFSET + 1] & 0xFF)
+        num = (num << 8) | (self.buffer[HOSTS_CONFIGURATION_NUM_OFFSET + 2] & 0xFF)
+        num = (num << 8) | (self.buffer[HOSTS_CONFIGURATION_NUM_OFFSET + 3] & 0xFF)
         hosts = []
         for i in range(0, num):
             hit = self.buffer[HOSTS_CONFIGURATION_NUM_OFFSET + 
@@ -304,7 +304,7 @@ class HostsConfigurationPacket(ControllerPacket):
                 "hit": hit,
                 "ip": ip
             })
-        return rules
+        return hosts
     
     def set_hosts(self, hosts, num):
         self.buffer[HOSTS_CONFIGURATION_NUM_OFFSET] = (num >> 24) & 0xFF
@@ -331,7 +331,7 @@ class HostsConfigurationPacket(ControllerPacket):
         return self.buffer;
 
 
-MESH_CONFIGURATION_TYPE = 2
+MESH_CONFIGURATION_TYPE = 4
 MESH_CONFIGURATION_TYPE_OFFSSET = 0
 MESH_CONFIGURATION_TYPE_LENGTH = 4
 MESH_CONFIGURATION_LENGTH_OFFSET = 4
@@ -387,10 +387,10 @@ class MeshConfigurationPacket(ControllerPacket):
     def get_nonce(self):
         return self.buffer[MESH_CONFIGURATION_NONCE_OFFSET:MESH_CONFIGURATION_NONCE_OFFSET + MESH_CONFIGURATION_NONCE_LENGTH]
     def get_mesh(self):
-        num = (self.buffer[MESH_CONFIGURATION_NUM_OFFSET] >> 24) & 0xFF
-        num = num | ((self.buffer[MESH_CONFIGURATION_NUM_OFFSET + 1] >> 16) & 0xFF)
-        num = num | ((self.buffer[MESH_CONFIGURATION_NUM_OFFSET + 2] >> 8) & 0xFF)
-        num = num | ((self.buffer[MESH_CONFIGURATION_NUM_OFFSET + 3]) & 0xFF)
+        num = (self.buffer[MESH_CONFIGURATION_NUM_OFFSET]) & 0xFF
+        num = (num << 8) | (self.buffer[MESH_CONFIGURATION_NUM_OFFSET + 1] & 0xFF)
+        num = (num << 8) | (self.buffer[MESH_CONFIGURATION_NUM_OFFSET + 2] & 0xFF)
+        num = (num << 8) | (self.buffer[MESH_CONFIGURATION_NUM_OFFSET + 3] & 0xFF)
         mesh = []
         for i in range(0, num):
             hit1 = self.buffer[MESH_CONFIGURATION_NUM_OFFSET + 
