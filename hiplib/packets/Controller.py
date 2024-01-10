@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 CONTROLLER_PACKET_TYPE_OFFSSET = 0
+CONTROLLER_LENGTH_OFFSET = 4
 class ControllerPacket():
     def __init__(self, buffer):
         self.buffer = buffer
@@ -31,6 +32,19 @@ class ControllerPacket():
         type = (type << 8) | self.buffer[CONTROLLER_PACKET_TYPE_OFFSSET + 2];
         type = (type << 8) | self.buffer[CONTROLLER_PACKET_TYPE_OFFSSET + 3];
         return type
+
+    def set_packet_length(self, length):
+        self.buffer[CONTROLLER_LENGTH_OFFSET] = (length >> 24) & 0xFF;
+        self.buffer[CONTROLLER_LENGTH_OFFSET + 1] = (length >> 16) & 0xFF;
+        self.buffer[CONTROLLER_LENGTH_OFFSET + 2] = (length >> 8) & 0xFF;
+        self.buffer[CONTROLLER_LENGTH_OFFSET + 3] = length & 0xFF;
+    def get_packet_length(self):
+        length = 0
+        length = self.buffer[CONTROLLER_LENGTH_OFFSET]
+        length = (length << 8) | self.buffer[CONTROLLER_LENGTH_OFFSET + 1];
+        length = (length << 8) | self.buffer[CONTROLLER_LENGTH_OFFSET + 2];
+        length = (length << 8) | self.buffer[CONTROLLER_LENGTH_OFFSET + 3];
+        return length
 
 HEART_BEAT_TYPE = 1
 HEART_BEAT_TYPE_OFFSSET = 0
