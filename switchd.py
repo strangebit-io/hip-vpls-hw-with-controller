@@ -177,42 +177,45 @@ def config_loop():
             hip_config_socket = open_controller_socket();
     finally:
         hip_config_socket_lock.release();
+    buf = bytearray([])
     while True:
-        buf += hip_config_socket.recv(hip_config.config["default_buffer"]["default_buffer"])
-        packet = Controller.ControllerPacket(buf)
-        if packet.get_packet_length() > len(buf):
-            continue
-        pbuf = buf[:packet.get_packet_type()]
-        buf = buf[packet.get_packet_type():]
-        if packet.get_packet_type() == Controller.FIREWALL_CONFIGURATION_TYPE:
-            packet = Controller.FirewallConfigurationPacket(pbuf)
-            hmac = packet.get_hmac()
-            packet.set_hmac([0]*digest.SHA256Digest.LENGTH)
-            hmac = digest.SHA256HMAC(hip_config.config["controller"]["master_secret"])            
-            if hmac != hmac.digest(packet.get_buffer()):
-                logging.critical("Invalid HMAC in the packet")
-            rules = packet.get_rules()
-            write_rules_to_file(rules)
-        elif packet.get_packet_type() == Controller.MESH_CONFIGURATION_TYPE:
-            packet = Controller.MeshConfigurationPacket(pbuf)
-            hmac = packet.get_hmac()
-            packet.set_hmac([0]*digest.SHA256Digest.LENGTH)
-            hmac = digest.SHA256HMAC(hip_config.config["controller"]["master_secret"])            
-            if hmac != hmac.digest(packet.get_buffer()):
-                logging.critical("Invalid HMAC in the packet")
-            mesh = packet.get_mesh();
-            write_mesh_to_file(mesh)
-        elif packet.get_packet_type() == Controller.HOSTS_CONFIGURATION_TYPE:
-            packet = Controller.HostsConfigurationPacket(pbuf)
-            hmac = packet.get_hmac()
-            packet.set_hmac([0]*digest.SHA256Digest.LENGTH)
-            hmac = digest.SHA256HMAC(hip_config.config["controller"]["master_secret"])           
-            if hmac != hmac.digest(packet.get_buffer()):
-                logging.critical("Invalid HMAC in the packet")
-            hosts = packet.get_hosts()
-            write_hosts_to_file(hosts)
-        else:
-            logging.debug("Invalid control-plane packet type")
+        buf += bytearray(hip_config_socket.recv(hip_config.config["default_buffer"]["default_buffer"]))
+        while len(buf) >= Controller.BASIC_HEADER_OFFSET:
+            packet = Controller.ControllerPacket(buf)
+            if packet.get_packet_length() > len(buf):
+                break
+            pbuf = buf[:packet.get_packet_type()]
+            buf = buf[packet.get_packet_type():]
+            
+            if packet.get_packet_type() == Controller.FIREWALL_CONFIGURATION_TYPE:
+                packet = Controller.FirewallConfigurationPacket(pbuf)
+                hmac = packet.get_hmac()
+                packet.set_hmac([0]*digest.SHA256Digest.LENGTH)
+                hmac = digest.SHA256HMAC(hip_config.config["controller"]["master_secret"])            
+                if hmac != hmac.digest(packet.get_buffer()):
+                    logging.critical("Invalid HMAC in the packet")
+                rules = packet.get_rules()
+                write_rules_to_file(rules)
+            elif packet.get_packet_type() == Controller.MESH_CONFIGURATION_TYPE:
+                packet = Controller.MeshConfigurationPacket(pbuf)
+                hmac = packet.get_hmac()
+                packet.set_hmac([0]*digest.SHA256Digest.LENGTH)
+                hmac = digest.SHA256HMAC(hip_config.config["controller"]["master_secret"])            
+                if hmac != hmac.digest(packet.get_buffer()):
+                    logging.critical("Invalid HMAC in the packet")
+                mesh = packet.get_mesh();
+                write_mesh_to_file(mesh)
+            elif packet.get_packet_type() == Controller.HOSTS_CONFIGURATION_TYPE:
+                packet = Controller.HostsConfigurationPacket(pbuf)
+                hmac = packet.get_hmac()
+                packet.set_hmac([0]*digest.SHA256Digest.LENGTH)
+                hmac = digest.SHA256HMAC(hip_config.config["controller"]["master_secret"])           
+                if hmac != hmac.digest(packet.get_buffer()):
+                    logging.critical("Invalid HMAC in the packet")
+                hosts = packet.get_hosts()
+                write_hosts_to_file(hosts)
+            else:
+                logging.debug("Invalid control-plane packet type")
 
 def heart_beat_loop():
     """
