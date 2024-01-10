@@ -15,9 +15,22 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+CONTROLLER_PACKET_TYPE_OFFSSET = 0
 class ControllerPacket():
-    def __init__(self):
-        pass
+    def __init__(self, buffer):
+        self.buffer = buffer
+    def set_packet_type(self, type):
+        self.buffer[CONTROLLER_PACKET_TYPE_OFFSSET] = (type >> 24) & 0xFF;
+        self.buffer[CONTROLLER_PACKET_TYPE_OFFSSET + 1] = (type >> 16) & 0xFF;
+        self.buffer[CONTROLLER_PACKET_TYPE_OFFSSET + 2] = (type >> 8) & 0xFF;
+        self.buffer[CONTROLLER_PACKET_TYPE_OFFSSET + 3] = type & 0xFF;
+    def get_packet_type(self):
+        type = 0
+        type = self.buffer[CONTROLLER_PACKET_TYPE_OFFSSET]
+        type = (type << 8) | self.buffer[CONTROLLER_PACKET_TYPE_OFFSSET + 1];
+        type = (type << 8) | self.buffer[CONTROLLER_PACKET_TYPE_OFFSSET + 2];
+        type = (type << 8) | self.buffer[CONTROLLER_PACKET_TYPE_OFFSSET + 3];
+        return type
 
 HEART_BEAT_TYPE = 1
 HEART_BEAT_TYPE_OFFSSET = 0
