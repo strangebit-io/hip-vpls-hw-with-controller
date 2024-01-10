@@ -74,7 +74,7 @@ class HeartbeatPacket(ControllerPacket):
         self.buffer[HEART_BEAT_LENGTH_OFFSET + 1] = (length >> 16) & 0xFF;
         self.buffer[HEART_BEAT_LENGTH_OFFSET + 2] = (length >> 8) & 0xFF;
         self.buffer[HEART_BEAT_LENGTH_OFFSET + 3] = length & 0xFF;
-    def get_packet_type(self):
+    def get_packet_length(self):
         length = 0
         length = self.buffer[HEART_BEAT_LENGTH_OFFSET]
         length = (length << 8) | self.buffer[HEART_BEAT_LENGTH_OFFSET + 1];
@@ -140,7 +140,7 @@ class FirewallConfigurationPacket(ControllerPacket):
         self.buffer[FIREWALL_CONFIGURATION_LENGTH_OFFSET + 1] = (length >> 16) & 0xFF;
         self.buffer[FIREWALL_CONFIGURATION_LENGTH_OFFSET + 2] = (length >> 8) & 0xFF;
         self.buffer[FIREWALL_CONFIGURATION_LENGTH_OFFSET + 3] = length & 0xFF;
-    def get_packet_type(self):
+    def get_packet_length(self):
         length = 0
         length = self.buffer[FIREWALL_CONFIGURATION_LENGTH_OFFSET]
         length = (length << 8) | self.buffer[FIREWALL_CONFIGURATION_LENGTH_OFFSET + 1];
@@ -274,7 +274,7 @@ class HostsConfigurationPacket(ControllerPacket):
         self.buffer[HOSTS_CONFIGURATION_LENGTH_OFFSET + 1] = (length >> 16) & 0xFF;
         self.buffer[HOSTS_CONFIGURATION_LENGTH_OFFSET + 2] = (length >> 8) & 0xFF;
         self.buffer[HOSTS_CONFIGURATION_LENGTH_OFFSET + 3] = length & 0xFF;
-    def get_packet_type(self):
+    def get_packet_length(self):
         length = 0
         length = self.buffer[HOSTS_CONFIGURATION_LENGTH_OFFSET]
         length = (length << 8) | self.buffer[HOSTS_CONFIGURATION_LENGTH_OFFSET + 1];
@@ -384,7 +384,7 @@ class MeshConfigurationPacket(ControllerPacket):
         self.buffer[MESH_CONFIGURATION_LENGTH_OFFSET + 1] = (length >> 16) & 0xFF;
         self.buffer[MESH_CONFIGURATION_LENGTH_OFFSET + 2] = (length >> 8) & 0xFF;
         self.buffer[MESH_CONFIGURATION_LENGTH_OFFSET + 3] = length & 0xFF;
-    def get_packet_type(self):
+    def get_packet_length(self):
         length = 0
         length = self.buffer[MESH_CONFIGURATION_LENGTH_OFFSET]
         length = (length << 8) | self.buffer[MESH_CONFIGURATION_LENGTH_OFFSET + 2];
