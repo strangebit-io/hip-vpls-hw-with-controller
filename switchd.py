@@ -139,6 +139,37 @@ def open_controller_socket():
                                     server_side=False);
     return secure_socket
 
+def write_rules_to_file(rules):
+    fd = open(hip_config.config["firewall"]["rules_file"], "w")
+    for rule in rules:
+        hit1 = misc.Utils.ipv6_bytes_to_hex_formatted_resolver(rule["hit1"])
+        hit2 = misc.Utils.ipv6_bytes_to_hex_formatted_resolver(rule["hit2"])
+        if rule["rule"] == 1:
+            rule = "allow"
+        else:
+            rule = "deny"
+        fd.write(hit1 + " " + hit2 + " " + rule + "\n")
+    fd.close();
+    hiplib.firewall.load_rules(hip_config.config["firewall"]["rules_file"])
+
+def write_mesh_to_file(mesh):
+    fd = open(hip_config.config["swtich"]["mesh"], "w")
+    for m in mesh:
+        hit1 = misc.Utils.ipv6_bytes_to_hex_formatted_resolver(mesh["hit1"])
+        hit2 = misc.Utils.ipv6_bytes_to_hex_formatted_resolver(mesh["hit2"])
+        fd.write(hit1 + " " + hit2 + "\n")
+    fd.close();
+    fib.load_mesh(hip_config.config["switch"]["mesh"])
+
+def write_hosts_to_file(hosts):
+    fd = open(hip_config.config["resolver"]["hosts_file"], "w")
+    for host in hosts:
+        hit = misc.Utils.ipv6_bytes_to_hex_formatted_resolver(host["hit"])
+        ip = misc.Utils.ipv4_bytes_to_string(host["ip"])
+        fd.write(hit + " " + ip + "\n")
+    fd.close();
+    hiplib.hit_resolver.load_records(hip_config.config["resolver"]["hosts_file"])
+
 def config_loop():
     try:
         hip_config_socket_lock.acquire();
@@ -147,8 +178,41 @@ def config_loop():
     finally:
         hip_config_socket_lock.release();
     while True:
-        sleep(1);
-        pass
+        buf += hip_config_socket.recv(hip_config.config["default_buffer"]["default_buffer"])
+        packet = Controller.ControllerPacket(buf)
+        if packet.get_packet_length() > len(buf):
+            continue
+        pbuf = buf[:packet.get_packet_type()]
+        buf = buf[packet.get_packet_type():]
+        if packet.get_packet_type() == Controller.FIREWALL_CONFIGURATION_TYPE:
+            packet = Controller.FirewallConfigurationPacket(pbuf)
+            hmac = packet.get_hmac()
+            packet.set_hmac([0]*digest.SHA256Digest.LENGTH)
+            hmac = digest.SHA256HMAC(hip_config.config["controller"]["master_secret"])            
+            if hmac != hmac.digest(packet.get_buffer()):
+                logging.critical("Invalid HMAC in the packet")
+            rules = packet.get_rules()
+            write_rules_to_file(rules)
+        elif packet.get_packet_type() == Controller.MESH_CONFIGURATION_TYPE:
+            packet = Controller.MeshConfigurationPacket(pbuf)
+            hmac = packet.get_hmac()
+            packet.set_hmac([0]*digest.SHA256Digest.LENGTH)
+            hmac = digest.SHA256HMAC(hip_config.config["controller"]["master_secret"])            
+            if hmac != hmac.digest(packet.get_buffer()):
+                logging.critical("Invalid HMAC in the packet")
+            mesh = packet.get_mesh();
+            write_mesh_to_file(mesh)
+        elif packet.get_packet_type() == Controller.HOSTS_CONFIGURATION_TYPE:
+            packet = Controller.HostsConfigurationPacket(pbuf)
+            hmac = packet.get_hmac()
+            packet.set_hmac([0]*digest.SHA256Digest.LENGTH)
+            hmac = digest.SHA256HMAC(hip_config.config["controller"]["master_secret"])           
+            if hmac != hmac.digest(packet.get_buffer()):
+                logging.critical("Invalid HMAC in the packet")
+            hosts = packet.get_hosts()
+            write_hosts_to_file(hosts)
+        else:
+            logging.debug("Invalid control-plane packet type")
 
 def heart_beat_loop():
     """
@@ -171,6 +235,7 @@ def heart_beat_loop():
         heartbeat.set_packet_type(Controller.HEART_BEAT_TYPE);
         heartbeat.set_hit(hit);
         heartbeat.set_ip(ip);
+        heartbeat.set_packet_length(Controller.HEART_BEAT_LENGTH_LENGTH);
         heartbeat.set_nonce(nonce);
         buf = heartbeat.get_buffer();
         hmac = digest.SHA256HMAC(hip_config.config["controller"]["master_secret"])
