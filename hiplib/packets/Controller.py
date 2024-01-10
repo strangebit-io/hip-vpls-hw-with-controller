@@ -425,7 +425,7 @@ class MeshConfigurationPacket(ControllerPacket):
             })
         return mesh
     
-    def set_rules(self, rules, num):
+    def set_mesh(self, mesh, num):
         self.buffer[MESH_CONFIGURATION_NUM_OFFSET] = (num >> 24) & 0xFF
         self.buffer[MESH_CONFIGURATION_NUM_OFFSET + 1] = (num >> 16) & 0xFF
         self.buffer[MESH_CONFIGURATION_NUM_OFFSET + 2] = (num >> 8) & 0xFF
@@ -436,13 +436,13 @@ class MeshConfigurationPacket(ControllerPacket):
                                MESH_CONFIGURATION_HIT_LENGTH * 2 * i: 
                                MESH_CONFIGURATION_NUM_OFFSET + 
                                MESH_CONFIGURATION_NUM_LENGTH + 
-                               MESH_CONFIGURATION_HIT_LENGTH * (2 * i + 1)] = bytearray(rules[i]["hit1"])
+                               MESH_CONFIGURATION_HIT_LENGTH * (2 * i + 1)] = bytearray(mesh[i]["hit1"])
             self.buffer[MESH_CONFIGURATION_NUM_OFFSET + 
                                MESH_CONFIGURATION_NUM_LENGTH + 
                                MESH_CONFIGURATION_HIT_LENGTH * (2 * i + 1):
                                MESH_CONFIGURATION_NUM_OFFSET + 
                                MESH_CONFIGURATION_NUM_LENGTH + 
-                               MESH_CONFIGURATION_HIT_LENGTH * (2 * i + 2)] = bytearray(rules[i]["hit2"])
+                               MESH_CONFIGURATION_HIT_LENGTH * (2 * i + 2)] = bytearray(mesh[i]["hit2"])
             
     def get_buffer(self):
         return self.buffer;
