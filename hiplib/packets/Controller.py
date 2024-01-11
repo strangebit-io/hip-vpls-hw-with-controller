@@ -209,6 +209,7 @@ class FirewallConfigurationPacket(ControllerPacket):
         return rules
     
     def set_rules(self, rules, num):
+        self.buffer += bytearray([0] * (4 + num * (FIREWALL_CONFIGURATION_HIT_LENGTH *2 + FIREWALL_CONFIGURATION_RULE_LENGTH)))
         self.buffer[FIREWALL_CONFIGURATION_NUM_OFFSET] = (num >> 24) & 0xFF
         self.buffer[FIREWALL_CONFIGURATION_NUM_OFFSET + 1] = (num >> 16) & 0xFF
         self.buffer[FIREWALL_CONFIGURATION_NUM_OFFSET + 2] = (num >> 8) & 0xFF
@@ -372,7 +373,6 @@ MESH_CONFIGURATION_NONCE_LENGTH = 4
 MESH_CONFIGURATION_NUM_OFFSET = 44
 MESH_CONFIGURATION_NUM_LENGTH = 4
 MESH_CONFIGURATION_HIT_LENGTH = 16
-MESH_CONFIGURATION_RULE_LENGTH = 4
 
 class MeshConfigurationPacket(ControllerPacket):
     def __init__(self, buffer = None):
@@ -416,6 +416,7 @@ class MeshConfigurationPacket(ControllerPacket):
     def get_nonce(self):
         return self.buffer[MESH_CONFIGURATION_NONCE_OFFSET:MESH_CONFIGURATION_NONCE_OFFSET + MESH_CONFIGURATION_NONCE_LENGTH]
     def get_mesh(self):
+        
         num = (self.buffer[MESH_CONFIGURATION_NUM_OFFSET]) & 0xFF
         num = (num << 8) | (self.buffer[MESH_CONFIGURATION_NUM_OFFSET + 1] & 0xFF)
         num = (num << 8) | (self.buffer[MESH_CONFIGURATION_NUM_OFFSET + 2] & 0xFF)
@@ -442,6 +443,7 @@ class MeshConfigurationPacket(ControllerPacket):
         return mesh
     
     def set_mesh(self, mesh, num):
+        self.buffer += bytearray([0] * (4 + num * MESH_CONFIGURATION_HIT_LENGTH * 2))
         self.buffer[MESH_CONFIGURATION_NUM_OFFSET] = (num >> 24) & 0xFF
         self.buffer[MESH_CONFIGURATION_NUM_OFFSET + 1] = (num >> 16) & 0xFF
         self.buffer[MESH_CONFIGURATION_NUM_OFFSET + 2] = (num >> 8) & 0xFF
