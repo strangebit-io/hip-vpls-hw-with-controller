@@ -265,10 +265,10 @@ class Utils():
 		try:
 			parts = address.split(".");
 			address_as_bytearray = bytearray([0] * 4);
-			address_as_bytearray = int(parts[0]);
-			address_as_bytearray = int(parts[1]);
-			address_as_bytearray = int(parts[2]);
-			address_as_bytearray = int(parts[3]);
+			address_as_bytearray[0] = int(parts[0]);
+			address_as_bytearray[1] = int(parts[1]);
+			address_as_bytearray[2] = int(parts[2]);
+			address_as_bytearray[3] = int(parts[3]);
 			return address_as_bytearray
 		except:
 			return None;
