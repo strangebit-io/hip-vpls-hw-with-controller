@@ -335,6 +335,7 @@ class HostsConfigurationPacket(ControllerPacket):
         return hosts
     
     def set_hosts(self, hosts, num):
+        self.buffer += bytearray([0] * (4 + num * (HOSTS_CONFIGURATION_HIT_LENGTH + HOSTS_CONFIGURATION_IP_LENGTH)))
         self.buffer[HOSTS_CONFIGURATION_NUM_OFFSET] = (num >> 24) & 0xFF
         self.buffer[HOSTS_CONFIGURATION_NUM_OFFSET + 1] = (num >> 16) & 0xFF
         self.buffer[HOSTS_CONFIGURATION_NUM_OFFSET + 2] = (num >> 8) & 0xFF

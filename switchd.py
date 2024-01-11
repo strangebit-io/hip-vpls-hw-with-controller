@@ -176,25 +176,30 @@ def config_loop():
     global hip_config_socket
     global hip_config_socket_lock
     while True:
+        logging.debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
         if not hip_config_socket:
             buf = bytearray([])
             sleep(hip_config.config["controller"]["heartbeat_interval"]);
             continue
-        buf += bytearray(hip_config_socket.recv(hip_config.config["default_buffer"]["default_buffer"]))
+        buf += bytearray(hip_config_socket.recv(hip_config.config["controller"]["default_buffer"]))
         while len(buf) >= Controller.BASIC_HEADER_OFFSET:
             packet = Controller.ControllerPacket(buf)
+            logging.debug("PACKET TYPE **************************************** " + str(packet.get_packet_type()))
             if packet.get_packet_length() > len(buf):
                 break
-            pbuf = buf[:packet.get_packet_type()]
-            buf = buf[packet.get_packet_type():]
+            pbuf = buf[:packet.get_packet_length()]
+            buf = buf[packet.get_packet_length():]
+            logging.debug("+++++++++++++++++++++++++++++++++++++++++++++++")
+            logging.debug(packet.get_packet_type())
             
             if packet.get_packet_type() == Controller.FIREWALL_CONFIGURATION_TYPE:
                 packet = Controller.FirewallConfigurationPacket(pbuf)
                 hmac = packet.get_hmac()
                 packet.set_hmac([0]*digest.SHA256Digest.LENGTH)
-                hmac = digest.SHA256HMAC(bytearray(hip_config.config["controller"]["master_secret"], encoding="ascii"))            
-                if hmac != hmac.digest(packet.get_buffer()):
+                sha256hmac = digest.SHA256HMAC(bytearray(hip_config.config["controller"]["master_secret"], encoding="ascii"))            
+                if hmac != sha256hmac.digest(packet.get_buffer()):
                     logging.critical("Invalid HMAC in the packet")
+                    continue
                 rules = packet.get_rules()
                 write_rules_to_file(rules)
             elif packet.get_packet_type() == Controller.MESH_CONFIGURATION_TYPE:
@@ -202,18 +207,23 @@ def config_loop():
                 hmac = packet.get_hmac()
                 packet.set_hmac([0]*digest.SHA256Digest.LENGTH)
                 hmac = digest.SHA256HMAC(bytearray(hip_config.config["controller"]["master_secret"], encoding="ascii"))            
-                if hmac != hmac.digest(packet.get_buffer()):
+                if hmac != sha256hmac.digest(packet.get_buffer()):
                     logging.critical("Invalid HMAC in the packet")
+                    continue
                 mesh = packet.get_mesh();
                 write_mesh_to_file(mesh)
             elif packet.get_packet_type() == Controller.HOSTS_CONFIGURATION_TYPE:
+                logging.debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                 packet = Controller.HostsConfigurationPacket(pbuf)
                 hmac = packet.get_hmac()
                 packet.set_hmac([0]*digest.SHA256Digest.LENGTH)
-                hmac = digest.SHA256HMAC(bytearray(hip_config.config["controller"]["master_secret"], encoding="ascii"))           
-                if hmac != hmac.digest(packet.get_buffer()):
+                sha256hmac = digest.SHA256HMAC(bytearray(hip_config.config["controller"]["master_secret"], encoding="ascii"))           
+                if hmac != sha256hmac.digest(packet.get_buffer()):
                     logging.critical("Invalid HMAC in the packet")
+                    continue;
+                logging.debug("Writing to the file >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                 hosts = packet.get_hosts()
+                logging.debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                 write_hosts_to_file(hosts)
             else:
                 logging.debug("Invalid control-plane packet type")
@@ -250,6 +260,15 @@ def heart_beat_loop():
         hmac = digest.SHA256HMAC(bytearray(hip_config.config["controller"]["master_secret"], encoding="ascii"))
         hmac_ = hmac.digest(buf)
         heartbeat.set_hmac(hmac_)
+        logging.debug("---------------------")
+        logging.debug(hexlify(buf))
+        logging.debug(bytearray(hip_config.config["controller"]["master_secret"], encoding="ascii"))
+        logging.debug(hexlify(heartbeat.get_buffer()))
+        logging.debug("Nonce : " + str(hexlify(heartbeat.get_nonce())))
+        logging.debug("HIT: " + str(hexlify(heartbeat.get_hit())))
+        logging.debug("IP: " + str(hexlify(heartbeat.get_ip())))
+        logging.debug("MAC: " + str(hexlify(heartbeat.get_hmac())))
+        logging.debug("++++++++++++++++++++++")
         bytes_sent = hip_config_socket.send(heartbeat.get_buffer());
         if bytes_sent == 0:
             try:
