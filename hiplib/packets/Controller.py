@@ -62,7 +62,7 @@ HEART_BEAT_IP_LENGTH = 4
 BASIC_HEADER_OFFSET = 48
 
 class HeartbeatPacket(ControllerPacket):
-    def __init__(self, buffer):
+    def __init__(self, buffer = None):
         if not buffer:
             self.buffer = bytearray([0] * (HEART_BEAT_TYPE_LENGTH +
                                            HEART_BEAT_LENGTH_LENGTH +
@@ -130,7 +130,7 @@ FIREWALL_CONFIGURATION_HIT_LENGTH = 16
 FIREWALL_CONFIGURATION_RULE_LENGTH = 4
 
 class FirewallConfigurationPacket(ControllerPacket):
-    def __init__(self, buffer):
+    def __init__(self, buffer = None):
         if not buffer:
             self.buffer = bytearray([0] * (FIREWALL_CONFIGURATION_TYPE_LENGTH +
                                            FIREWALL_CONFIGURATION_LENGTH_LENGTH +
@@ -264,7 +264,7 @@ HOSTS_CONFIGURATION_HIT_LENGTH = 16
 HOSTS_CONFIGURATION_IP_LENGTH = 4
 
 class HostsConfigurationPacket(ControllerPacket):
-    def __init__(self, buffer):
+    def __init__(self, buffer = None):
         if not buffer:
             self.buffer = bytearray([0] * (HOSTS_CONFIGURATION_TYPE_LENGTH +
                                            HOSTS_CONFIGURATION_LENGTH_LENGTH +
@@ -374,7 +374,7 @@ MESH_CONFIGURATION_HIT_LENGTH = 16
 MESH_CONFIGURATION_RULE_LENGTH = 4
 
 class MeshConfigurationPacket(ControllerPacket):
-    def __init__(self, buffer):
+    def __init__(self, buffer = None):
         if not buffer:
             self.buffer = bytearray([0] * (MESH_CONFIGURATION_TYPE_LENGTH +
                                            MESH_CONFIGURATION_LENGTH_LENGTH +

@@ -261,6 +261,19 @@ class Utils():
 		return formatted.rstrip(":");
 		"""
 	@staticmethod
+	def ipv4_to_bytes(address):
+		try:
+			parts = address.split(".");
+			address_as_bytearray = bytearray([0] * 4);
+			address_as_bytearray = int(parts[0]);
+			address_as_bytearray = int(parts[1]);
+			address_as_bytearray = int(parts[2]);
+			address_as_bytearray = int(parts[3]);
+			return address_as_bytearray
+		except:
+			return None;
+
+	@staticmethod
 	def ipv4_to_int(address):
 		"""
 		Converts IPv4 address to integer

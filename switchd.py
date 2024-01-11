@@ -84,6 +84,7 @@ import ssl
 # HIP controller lock
 hip_config_socket_lock = threading.Lock()
 
+
 # Copy routines
 import copy
 
@@ -175,6 +176,9 @@ def config_loop():
         hip_config_socket_lock.acquire();
         if not hip_config_socket:
             hip_config_socket = open_controller_socket();
+    except Exception as e:
+        logging.debug(e)
+        logging.debug("Error!!!!")
     finally:
         hip_config_socket_lock.release();
     buf = bytearray([])
@@ -191,7 +195,7 @@ def config_loop():
                 packet = Controller.FirewallConfigurationPacket(pbuf)
                 hmac = packet.get_hmac()
                 packet.set_hmac([0]*digest.SHA256Digest.LENGTH)
-                hmac = digest.SHA256HMAC(hip_config.config["controller"]["master_secret"])            
+                hmac = digest.SHA256HMAC(bytearray(hip_config.config["controller"]["master_secret"], encoding="ascii"))            
                 if hmac != hmac.digest(packet.get_buffer()):
                     logging.critical("Invalid HMAC in the packet")
                 rules = packet.get_rules()
@@ -200,7 +204,7 @@ def config_loop():
                 packet = Controller.MeshConfigurationPacket(pbuf)
                 hmac = packet.get_hmac()
                 packet.set_hmac([0]*digest.SHA256Digest.LENGTH)
-                hmac = digest.SHA256HMAC(hip_config.config["controller"]["master_secret"])            
+                hmac = digest.SHA256HMAC(bytearray(hip_config.config["controller"]["master_secret"], encoding="ascii"))            
                 if hmac != hmac.digest(packet.get_buffer()):
                     logging.critical("Invalid HMAC in the packet")
                 mesh = packet.get_mesh();
@@ -209,7 +213,7 @@ def config_loop():
                 packet = Controller.HostsConfigurationPacket(pbuf)
                 hmac = packet.get_hmac()
                 packet.set_hmac([0]*digest.SHA256Digest.LENGTH)
-                hmac = digest.SHA256HMAC(hip_config.config["controller"]["master_secret"])           
+                hmac = digest.SHA256HMAC(bytearray(hip_config.config["controller"]["master_secret"], encoding="ascii"))           
                 if hmac != hmac.digest(packet.get_buffer()):
                     logging.critical("Invalid HMAC in the packet")
                 hosts = packet.get_hosts()
@@ -233,7 +237,7 @@ def heart_beat_loop():
     while True:
         nonce = os.urandom(4);
         hit = hiplib.get_own_hit();
-        ip = misc.Utils.ipv4_to_int(hip_config.config["swtich"]["source_ip"]);
+        ip = misc.Utils.ipv4_to_bytes(hip_config.config["swtich"]["source_ip"]);
         heartbeat = Controller.HeartbeatPacket();
         heartbeat.set_packet_type(Controller.HEART_BEAT_TYPE);
         heartbeat.set_hit(hit);
@@ -241,9 +245,9 @@ def heart_beat_loop():
         heartbeat.set_packet_length(Controller.HEART_BEAT_LENGTH_LENGTH);
         heartbeat.set_nonce(nonce);
         buf = heartbeat.get_buffer();
-        hmac = digest.SHA256HMAC(hip_config.config["controller"]["master_secret"])
-        digest = hmac.digest(buf)
-        heartbeat.set_hmac(digest)
+        hmac = digest.SHA256HMAC(bytearray(hip_config.config["controller"]["master_secret"], encoding="ascii"))
+        hmac_ = hmac.digest(buf)
+        heartbeat.set_hmac(hmac_)
         bytes_sent = hip_config_socket.send(heartbeat.get_buffer());
         if bytes_sent == 0:
             try:
