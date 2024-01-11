@@ -60,7 +60,7 @@ HEART_BEAT_HIT_LENGTH = 16
 HEART_BEAT_IP_OFFSET = 60
 HEART_BEAT_IP_LENGTH = 4
 BASIC_HEADER_OFFSET = 48
-
+HEART_BEAT_PACKET_LENGTH = 64
 class HeartbeatPacket(ControllerPacket):
     def __init__(self, buffer = None):
         if not buffer:
