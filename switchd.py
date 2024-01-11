@@ -172,17 +172,14 @@ def write_hosts_to_file(hosts):
     hiplib.hit_resolver.load_records(hip_config.config["resolver"]["hosts_file"])
 
 def config_loop():
-    try:
-        hip_config_socket_lock.acquire();
-        if not hip_config_socket:
-            hip_config_socket = open_controller_socket();
-    except Exception as e:
-        logging.debug(e)
-        logging.debug("Error!!!!")
-    finally:
-        hip_config_socket_lock.release();
     buf = bytearray([])
+    global hip_config_socket
+    global hip_config_socket_lock
     while True:
+        if not hip_config_socket:
+            buf = bytearray([])
+            sleep(hip_config.config["controller"]["heartbeat_interval"]);
+            continue
         buf += bytearray(hip_config_socket.recv(hip_config.config["default_buffer"]["default_buffer"]))
         while len(buf) >= Controller.BASIC_HEADER_OFFSET:
             packet = Controller.ControllerPacket(buf)
@@ -226,15 +223,20 @@ def heart_beat_loop():
     Heart beat loop: 
         send periodic registration messages to the cloud (this includes HIT and IP address)
     """
-    try:
-        hip_config_socket_lock.acquire();
-        if not hip_config_socket:
-            hip_config_socket = open_controller_socket();
-    except:
-        pass
-    finally:
-        hip_config_socket_lock.release();
+    global hip_config_socket
+    global hip_config_socket_lock
     while True:
+        try:
+            hip_config_socket_lock.acquire();
+            if not hip_config_socket:
+                hip_config_socket = open_controller_socket();
+        except Exception as e:
+            logging.debug(e)
+            logging.debug("Error!!!!")
+            sleep(hip_config.config["controller"]["heartbeat_interval"]);
+            continue
+        finally:
+            hip_config_socket_lock.release();
         nonce = os.urandom(4);
         hit = hiplib.get_own_hit();
         ip = misc.Utils.ipv4_to_bytes(hip_config.config["swtich"]["source_ip"]);
