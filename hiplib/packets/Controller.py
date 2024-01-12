@@ -14,6 +14,7 @@
 
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+import logging
 
 CONTROLLER_PACKET_TYPE_OFFSSET = 0
 CONTROLLER_LENGTH_OFFSET = 4
@@ -59,7 +60,7 @@ HEART_BEAT_HIT_OFFSET = 44
 HEART_BEAT_HIT_LENGTH = 16
 HEART_BEAT_IP_OFFSET = 60
 HEART_BEAT_IP_LENGTH = 4
-BASIC_HEADER_OFFSET = 48
+BASIC_HEADER_OFFSET = 44
 HEART_BEAT_PACKET_LENGTH = 64
 class HeartbeatPacket(ControllerPacket):
     def __init__(self, buffer = None):
@@ -182,13 +183,13 @@ class FirewallConfigurationPacket(ControllerPacket):
                                (FIREWALL_CONFIGURATION_HIT_LENGTH * 2 * i):
                                FIREWALL_CONFIGURATION_NUM_OFFSET + 
                                FIREWALL_CONFIGURATION_NUM_LENGTH + 
-                               FIREWALL_CONFIGURATION_HIT_LENGTH * (2 * i + 1)].decode()
+                               FIREWALL_CONFIGURATION_HIT_LENGTH * (2 * i + 1)]
             hit2 = self.buffer[FIREWALL_CONFIGURATION_NUM_OFFSET + 
                                FIREWALL_CONFIGURATION_NUM_LENGTH + 
                                FIREWALL_CONFIGURATION_HIT_LENGTH * (2 * i + 1):
                                FIREWALL_CONFIGURATION_NUM_OFFSET + 
                                (FIREWALL_CONFIGURATION_NUM_LENGTH + 
-                                FIREWALL_CONFIGURATION_HIT_LENGTH * (2 * i + 2))].decode()
+                                FIREWALL_CONFIGURATION_HIT_LENGTH * (2 * i + 2))]
             rule = (self.buffer[FIREWALL_CONFIGURATION_NUM_OFFSET + 
                                FIREWALL_CONFIGURATION_NUM_LENGTH + 
                                FIREWALL_CONFIGURATION_HIT_LENGTH * (2 * i + 2)] << 24) 
@@ -209,7 +210,7 @@ class FirewallConfigurationPacket(ControllerPacket):
         return rules
     
     def set_rules(self, rules, num):
-        self.buffer += bytearray([0] * (4 + num * (FIREWALL_CONFIGURATION_HIT_LENGTH *2 + FIREWALL_CONFIGURATION_RULE_LENGTH)))
+        self.buffer += bytearray([0] * (HOSTS_CONFIGURATION_NUM_LENGTH + num * (FIREWALL_CONFIGURATION_HIT_LENGTH *2 + FIREWALL_CONFIGURATION_RULE_LENGTH)))
         self.buffer[FIREWALL_CONFIGURATION_NUM_OFFSET] = (num >> 24) & 0xFF
         self.buffer[FIREWALL_CONFIGURATION_NUM_OFFSET + 1] = (num >> 16) & 0xFF
         self.buffer[FIREWALL_CONFIGURATION_NUM_OFFSET + 2] = (num >> 8) & 0xFF
@@ -319,7 +320,7 @@ class HostsConfigurationPacket(ControllerPacket):
                                HOSTS_CONFIGURATION_NUM_OFFSET + 
                                HOSTS_CONFIGURATION_NUM_LENGTH + 
                                HOSTS_CONFIGURATION_IP_LENGTH * i +
-                               HOSTS_CONFIGURATION_HIT_LENGTH * (i + 1)].decode()
+                               HOSTS_CONFIGURATION_HIT_LENGTH * (i + 1)]
             ip = self.buffer[HOSTS_CONFIGURATION_NUM_OFFSET + 
                                HOSTS_CONFIGURATION_NUM_LENGTH +
                                HOSTS_CONFIGURATION_IP_LENGTH * i + 
@@ -327,7 +328,7 @@ class HostsConfigurationPacket(ControllerPacket):
                                HOSTS_CONFIGURATION_NUM_OFFSET + 
                                HOSTS_CONFIGURATION_NUM_LENGTH + 
                                HOSTS_CONFIGURATION_IP_LENGTH * (i + 1) +
-                                HOSTS_CONFIGURATION_HIT_LENGTH * (i + 1)].decode()
+                                HOSTS_CONFIGURATION_HIT_LENGTH * (i + 1)]
             
             hosts.append({
                 "hit": hit,
@@ -336,7 +337,9 @@ class HostsConfigurationPacket(ControllerPacket):
         return hosts
     
     def set_hosts(self, hosts, num):
-        self.buffer += bytearray([0] * (4 + num * (HOSTS_CONFIGURATION_HIT_LENGTH + HOSTS_CONFIGURATION_IP_LENGTH)))
+        self.buffer += bytearray([0] * (HOSTS_CONFIGURATION_NUM_LENGTH + num * (HOSTS_CONFIGURATION_HIT_LENGTH + HOSTS_CONFIGURATION_IP_LENGTH)))
+        logging.debug("----------------------------------------********** -------------------------------------------")
+        logging.debug(len(self.buffer))
         self.buffer[HOSTS_CONFIGURATION_NUM_OFFSET] = (num >> 24) & 0xFF
         self.buffer[HOSTS_CONFIGURATION_NUM_OFFSET + 1] = (num >> 16) & 0xFF
         self.buffer[HOSTS_CONFIGURATION_NUM_OFFSET + 2] = (num >> 8) & 0xFF
@@ -344,7 +347,8 @@ class HostsConfigurationPacket(ControllerPacket):
         for i in range(0, num):
             self.buffer[HOSTS_CONFIGURATION_NUM_OFFSET + 
                                HOSTS_CONFIGURATION_NUM_LENGTH + 
-                               (HOSTS_CONFIGURATION_HIT_LENGTH * i):
+                               (HOSTS_CONFIGURATION_HIT_LENGTH * i) +
+                               (HOSTS_CONFIGURATION_IP_LENGTH * i):
                                HOSTS_CONFIGURATION_NUM_OFFSET + 
                                HOSTS_CONFIGURATION_NUM_LENGTH + 
                                HOSTS_CONFIGURATION_IP_LENGTH * i +
@@ -356,7 +360,9 @@ class HostsConfigurationPacket(ControllerPacket):
                                HOSTS_CONFIGURATION_NUM_OFFSET + 
                                HOSTS_CONFIGURATION_NUM_LENGTH + 
                                 HOSTS_CONFIGURATION_IP_LENGTH * (i + 1) +
-                               HOSTS_CONFIGURATION_HIT_LENGTH * (i + 1)] = bytearray(hosts[i]["ip"])    
+                               HOSTS_CONFIGURATION_HIT_LENGTH * (i + 1)] = bytearray(hosts[i]["ip"]) 
+        logging.debug("----------------------------------------********** -------------------------------------------")
+        logging.debug(len(self.buffer))   
     def get_buffer(self):
         return self.buffer;
 
@@ -428,13 +434,13 @@ class MeshConfigurationPacket(ControllerPacket):
                                (MESH_CONFIGURATION_HIT_LENGTH * 2 * i):
                                MESH_CONFIGURATION_NUM_OFFSET + 
                                MESH_CONFIGURATION_NUM_LENGTH + 
-                               MESH_CONFIGURATION_HIT_LENGTH * (2 * i + 1)].decode()
+                               MESH_CONFIGURATION_HIT_LENGTH * (2 * i + 1)]
             hit2 = self.buffer[MESH_CONFIGURATION_NUM_OFFSET + 
                                MESH_CONFIGURATION_NUM_LENGTH + 
                                MESH_CONFIGURATION_HIT_LENGTH * (2 * i + 1):
                                MESH_CONFIGURATION_NUM_OFFSET + 
                                (MESH_CONFIGURATION_NUM_LENGTH + 
-                                MESH_CONFIGURATION_HIT_LENGTH * (2 * i + 2))].decode()
+                                MESH_CONFIGURATION_HIT_LENGTH * (2 * i + 2))]
             
             mesh.append({
                 "hit1": hit1,
@@ -443,7 +449,7 @@ class MeshConfigurationPacket(ControllerPacket):
         return mesh
     
     def set_mesh(self, mesh, num):
-        self.buffer += bytearray([0] * (4 + num * MESH_CONFIGURATION_HIT_LENGTH * 2))
+        self.buffer += bytearray([0] * (HOSTS_CONFIGURATION_NUM_LENGTH + num * MESH_CONFIGURATION_HIT_LENGTH * 2))
         self.buffer[MESH_CONFIGURATION_NUM_OFFSET] = (num >> 24) & 0xFF
         self.buffer[MESH_CONFIGURATION_NUM_OFFSET + 1] = (num >> 16) & 0xFF
         self.buffer[MESH_CONFIGURATION_NUM_OFFSET + 2] = (num >> 8) & 0xFF
