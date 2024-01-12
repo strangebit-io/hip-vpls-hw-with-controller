@@ -175,14 +175,23 @@ def write_hosts_to_file(hosts):
     hiplib.hit_resolver.load_records(hip_config.config["resolver"]["hosts_file"])
 
 def write_acl_to_file(rules):
-    fd = open(hip_config.config["firewall"]["rules_file"], "w")
+    fd = open(hip_config.config["firewall"]["acl_file"], "w")
+
+    logging.debug("WRITING TO FILE ACL RULES.....")
+    logging.debug("NUMBER OF RULES %d" % (len(rules)))
+
     for rule in rules:
+
         mac1 = misc.Utils.mac_bytes_to_hex_formatted(rule["mac1"])
         mac2 = misc.Utils.mac_bytes_to_hex_formatted(rule["mac2"])
+        logging.debug(mac1)
+        logging.debug(mac2)
+
         if rule["rule"] == 1:
             rule = "allow"
         else:
             rule = "deny"
+
         fd.write(mac1 + " " + mac2 + " " + rule + "\n")
     fd.close();
     fib.load_rules(hip_config.config["firewall"]["acl_file"])
@@ -211,6 +220,7 @@ def config_loop():
             buf = bytearray([])
             sleep(hip_config.config["controller"]["heartbeat_interval"]);
             continue
+        logging.debug("GOT SOMETHING ON THE CONTROL INTERFACE");
         while len(buf) >= Controller.BASIC_HEADER_OFFSET:
             packet = Controller.ControllerPacket(buf)
             logging.debug("PACKET TYPE **************************************** " + str(packet.get_packet_type()))
