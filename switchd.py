@@ -108,17 +108,17 @@ hip_socket.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1);
 logging.info("Initializing IPSec socket");
 ip_sec_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, IPSec.IPSEC_PROTOCOL);
 #ip_sec_socket.bind(("0.0.0.0", IPSec.IPSEC_PROTOCOL));
-ip_sec_socket.bind((hip_config.config["swtich"]["source_ip"], IPSec.IPSEC_PROTOCOL))
+ip_sec_socket.bind((hip_config.config["switch"]["source_ip"], IPSec.IPSEC_PROTOCOL))
 
 # We will need to perform manual fragmentation
 ip_sec_socket.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1);
 # Open raw ethernet socket and bind it to the interface
 ETH_P_ALL = 3
 ether_socket = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, socket.htons(ETH_P_ALL));
-ether_socket.bind((hip_config.config["swtich"]["l2interface"], 0))
+ether_socket.bind((hip_config.config["switch"]["l2interface"], 0))
 
 # Initialize FIB
-fib = FIB(hip_config.config["swtich"]["mesh"])
+fib = FIB(hip_config.config["switch"]["mesh"])
 
 hip_config_socket = None
 
@@ -154,10 +154,10 @@ def write_rules_to_file(rules):
     hiplib.firewall.load_rules(hip_config.config["firewall"]["rules_file"])
 
 def write_mesh_to_file(mesh):
-    fd = open(hip_config.config["swtich"]["mesh"], "w")
+    fd = open(hip_config.config["switch"]["mesh"], "w")
     for m in mesh:
-        hit1 = misc.Utils.ipv6_bytes_to_hex_formatted_resolver(mesh["hit1"])
-        hit2 = misc.Utils.ipv6_bytes_to_hex_formatted_resolver(mesh["hit2"])
+        hit1 = misc.Utils.ipv6_bytes_to_hex_formatted_resolver(m["hit1"])
+        hit2 = misc.Utils.ipv6_bytes_to_hex_formatted_resolver(m["hit2"])
         fd.write(hit1 + " " + hit2 + "\n")
     fd.close();
     fib.load_mesh(hip_config.config["switch"]["mesh"])
@@ -170,6 +170,7 @@ def write_hosts_to_file(hosts):
         fd.write(hit + " " + ip + "\n")
     fd.close();
     hiplib.hit_resolver.load_records(hip_config.config["resolver"]["hosts_file"])
+
 
 def config_loop():
     buf = bytearray([])
@@ -219,11 +220,15 @@ def config_loop():
                 packet = Controller.MeshConfigurationPacket(pbuf)
                 hmac = packet.get_hmac()
                 packet.set_hmac([0]*digest.SHA256Digest.LENGTH)
-                hmac = digest.SHA256HMAC(bytearray(hip_config.config["controller"]["master_secret"], encoding="ascii"))            
+                logging.debug("packet.get_buffer()")
+                logging.debug(packet.get_buffer())
+                logging.debug(hexlify(packet.get_nonce()))
+                sha256hmac = digest.SHA256HMAC(bytearray(hip_config.config["controller"]["master_secret"], encoding="ascii"))            
                 if hmac != sha256hmac.digest(packet.get_buffer()):
                     logging.critical("Invalid HMAC in the packet")
                     continue
                 mesh = packet.get_mesh();
+                logging.debug(mesh)
                 write_mesh_to_file(mesh)
             elif packet.get_packet_type() == Controller.HOSTS_CONFIGURATION_TYPE:
                 logging.debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
@@ -262,13 +267,16 @@ def heart_beat_loop():
             hip_config_socket_lock.release();
         nonce = os.urandom(4);
         hit = hiplib.get_own_hit();
-        ip = misc.Utils.ipv4_to_bytes(hip_config.config["swtich"]["source_ip"]);
+        ip = misc.Utils.ipv4_to_bytes(hip_config.config["switch"]["source_ip"]);
         heartbeat = Controller.HeartbeatPacket();
         heartbeat.set_packet_type(Controller.HEART_BEAT_TYPE);
         heartbeat.set_hit(hit);
         heartbeat.set_ip(ip);
         heartbeat.set_packet_length(Controller.HEART_BEAT_LENGTH_LENGTH);
         heartbeat.set_nonce(nonce);
+        hostname = hip_config.config["controller"]["switch_name"].encode("ascii")
+        heartbeat.set_hostname_length(len(hostname))
+        heartbeat.set_hostname(hostname, len(hostname))
         buf = heartbeat.get_buffer();
         hmac = digest.SHA256HMAC(bytearray(hip_config.config["controller"]["master_secret"], encoding="ascii"))
         hmac_ = hmac.digest(buf)
@@ -353,7 +361,7 @@ def ether_loop():
             mesh = fib.get_next_hop(dst_mac);
             for (ihit, rhit) in mesh:
                 s = time()
-                packets = hiplib.process_l2_frame(frame, ihit, rhit, hip_config.config["swtich"]["source_ip"]);
+                packets = hiplib.process_l2_frame(frame, ihit, rhit, hip_config.config["switch"]["source_ip"]);
                 e = time()
                 #logging.info("L2 process time %f " % (e-s))
                 for (hip, packet, dest) in packets:
@@ -389,7 +397,7 @@ ether_if_th_loop.start();
 heart_beat_th_loop.start();
 config_th_loop.start();
 
-def run_swtich():
+def run_switch():
     while True:
         try:
             packets = hiplib.maintenance();
@@ -402,4 +410,4 @@ def run_swtich():
             logging.critical(e);
             sleep(1)
 
-run_swtich()
+run_switch()
