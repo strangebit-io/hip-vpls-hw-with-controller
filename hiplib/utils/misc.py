@@ -20,7 +20,7 @@ import os
 sys.path.append(os.getcwd())
 
 from math import log, ceil, floor
-from binascii import hexlify
+from binascii import hexlify, unhexlify
 import logging
 from os import urandom
 
@@ -215,6 +215,20 @@ class Utils():
 		Converts IPv6 bytes to a hexidecimal string
 		"""
 		return hexlify(address_bytes).decode("ascii");
+
+	@staticmethod
+	def mac_bytes_to_hex_formatted(address_bytes):
+		"""
+		Converts MAC bytes to a hexidecimal string
+		"""
+		return hexlify(address_bytes).decode("ascii");
+
+	@staticmethod
+	def mac_hex_to_bytes(mac):
+		"""
+		Converts MAC bytes to a hexidecimal string
+		"""
+		return unhexlify(mac);
 
 	@staticmethod
 	def ipv4_bytes_to_string(address_bytes):

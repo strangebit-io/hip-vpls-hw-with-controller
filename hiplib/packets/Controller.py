@@ -501,3 +501,146 @@ class MeshConfigurationPacket(ControllerPacket):
             
     def get_buffer(self):
         return self.buffer;
+
+ACL_CONFIGURATION_TYPE = 5
+ACL_CONFIGURATION_TYPE_OFFSSET = 0
+ACL_CONFIGURATION_TYPE_LENGTH = 4
+ACL_CONFIGURATION_LENGTH_OFFSET = 4
+ACL_CONFIGURATION_LENGTH_LENGTH = 4
+ACL_CONFIGURATION_HMAC_OFFSET = 8
+ACL_CONFIGURATION_HMAC_LENGTH = 32
+ACL_CONFIGURATION_NONCE_OFFSET = 40
+ACL_CONFIGURATION_NONCE_LENGTH = 4
+ACL_CONFIGURATION_NUM_OFFSET = 44
+ACL_CONFIGURATION_NUM_LENGTH = 4
+ACL_CONFIGURATION_MAC_LENGTH = 6
+ACL_CONFIGURATION_RULE_LENGTH = 4
+
+class ACLConfigurationPacket(ControllerPacket):
+    def __init__(self, buffer = None):
+        if not buffer:
+            self.buffer = bytearray([0] * (ACL_CONFIGURATION_TYPE_LENGTH +
+                                           ACL_CONFIGURATION_LENGTH_LENGTH +
+                                           ACL_CONFIGURATION_HMAC_LENGTH +
+                                           ACL_CONFIGURATION_NONCE_LENGTH))
+        else:
+            self.buffer = buffer
+    def set_packet_type(self, type):
+        self.buffer[ACL_CONFIGURATION_TYPE_OFFSSET] = (type >> 24) & 0xFF;
+        self.buffer[ACL_CONFIGURATION_TYPE_OFFSSET + 1] = (type >> 16) & 0xFF;
+        self.buffer[ACL_CONFIGURATION_TYPE_OFFSSET + 2] = (type >> 8) & 0xFF;
+        self.buffer[ACL_CONFIGURATION_TYPE_OFFSSET + 3] = type & 0xFF;
+    def get_packet_type(self):
+        type = 0
+        type = self.buffer[ACL_CONFIGURATION_TYPE_OFFSSET]
+        type = (type << 8) | self.buffer[ACL_CONFIGURATION_TYPE_OFFSSET + 1];
+        type = (type << 8) | self.buffer[ACL_CONFIGURATION_TYPE_OFFSSET + 2];
+        type = (type << 8) | self.buffer[ACL_CONFIGURATION_TYPE_OFFSSET + 3];
+        return type
+    def set_packet_length(self, length):
+        self.buffer[ACL_CONFIGURATION_LENGTH_OFFSET] = (length >> 24) & 0xFF;
+        self.buffer[ACL_CONFIGURATION_LENGTH_OFFSET + 1] = (length >> 16) & 0xFF;
+        self.buffer[ACL_CONFIGURATION_LENGTH_OFFSET + 2] = (length >> 8) & 0xFF;
+        self.buffer[ACL_CONFIGURATION_LENGTH_OFFSET + 3] = length & 0xFF;
+    def get_packet_length(self):
+        length = 0
+        length = self.buffer[ACL_CONFIGURATION_LENGTH_OFFSET]
+        length = (length << 8) | self.buffer[ACL_CONFIGURATION_LENGTH_OFFSET + 2];
+        length = (length << 8) | self.buffer[ACL_CONFIGURATION_LENGTH_OFFSET + 1];
+        length = (length << 8) | self.buffer[ACL_CONFIGURATION_LENGTH_OFFSET + 3];
+        return length
+    def set_hmac(self, hmac):
+        self.buffer[ACL_CONFIGURATION_HMAC_OFFSET:ACL_CONFIGURATION_HMAC_OFFSET + ACL_CONFIGURATION_HMAC_LENGTH] = hmac
+    def get_hmac(self):
+        return self.buffer[ACL_CONFIGURATION_HMAC_OFFSET:ACL_CONFIGURATION_HMAC_OFFSET + ACL_CONFIGURATION_HMAC_LENGTH]
+    def set_nonce(self, nonce):
+        self.buffer[ACL_CONFIGURATION_NONCE_OFFSET:ACL_CONFIGURATION_NONCE_OFFSET + ACL_CONFIGURATION_NONCE_LENGTH] = nonce
+    def get_nonce(self):
+        return self.buffer[ACL_CONFIGURATION_NONCE_OFFSET:ACL_CONFIGURATION_NONCE_OFFSET + ACL_CONFIGURATION_NONCE_LENGTH]
+    def get_rules(self):
+        num = self.buffer[ACL_CONFIGURATION_NUM_OFFSET] & 0xFF
+        num = (num << 8) | (self.buffer[ACL_CONFIGURATION_NUM_OFFSET + 1] & 0xFF)
+        num = (num << 8) | (self.buffer[ACL_CONFIGURATION_NUM_OFFSET + 2] & 0xFF)
+        num = (num << 8) | (self.buffer[ACL_CONFIGURATION_NUM_OFFSET + 3] & 0xFF)
+        rules = []
+        for i in range(0, num):
+            hit1 = self.buffer[ACL_CONFIGURATION_NUM_OFFSET + 
+                               ACL_CONFIGURATION_NUM_LENGTH + 
+                               (ACL_CONFIGURATION_MAC_LENGTH * 2 * i) + 
+                               ACL_CONFIGURATION_RULE_LENGTH * i:
+                               ACL_CONFIGURATION_NUM_OFFSET + 
+                               ACL_CONFIGURATION_NUM_LENGTH + 
+                               ACL_CONFIGURATION_MAC_LENGTH * (2 * i + 1) +
+                               ACL_CONFIGURATION_RULE_LENGTH * i]
+            hit2 = self.buffer[ACL_CONFIGURATION_NUM_OFFSET + 
+                               ACL_CONFIGURATION_NUM_LENGTH + 
+                               ACL_CONFIGURATION_MAC_LENGTH * (2 * i + 1) + 
+                               ACL_CONFIGURATION_RULE_LENGTH * i:
+                               ACL_CONFIGURATION_NUM_OFFSET + 
+                               (ACL_CONFIGURATION_NUM_LENGTH + 
+                                ACL_CONFIGURATION_MAC_LENGTH * (2 * i + 2)) +
+                                ACL_CONFIGURATION_RULE_LENGTH * i]
+            rule = (self.buffer[ACL_CONFIGURATION_NUM_OFFSET + 
+                               ACL_CONFIGURATION_NUM_LENGTH + 
+                               ACL_CONFIGURATION_MAC_LENGTH * (2 * i + 2) +
+                               ACL_CONFIGURATION_RULE_LENGTH * i] << 24) 
+            rule = (self.buffer[ACL_CONFIGURATION_NUM_OFFSET + 
+                               ACL_CONFIGURATION_NUM_LENGTH + 
+                               ACL_CONFIGURATION_RULE_LENGTH * i +
+                               ACL_CONFIGURATION_MAC_LENGTH * (2 * i + 2) + 1] << 16) | rule
+            rule = (self.buffer[ACL_CONFIGURATION_NUM_OFFSET + 
+                               ACL_CONFIGURATION_NUM_LENGTH + 
+                               ACL_CONFIGURATION_RULE_LENGTH * i +
+                               ACL_CONFIGURATION_MAC_LENGTH * (2 * i + 2) + 2] << 8) | rule
+            rule = (self.buffer[ACL_CONFIGURATION_NUM_OFFSET + 
+                               ACL_CONFIGURATION_NUM_LENGTH + 
+                               ACL_CONFIGURATION_RULE_LENGTH * i +
+                               ACL_CONFIGURATION_MAC_LENGTH * (2 * i + 2) + 3]) | rule
+            rules.append({
+                "mac1": hit1,
+                "mac2": hit2,
+                "rule": rule
+            })
+        return rules
+    
+    def set_rules(self, rules, num):
+        self.buffer += bytearray([0] * (ACL_CONFIGURATION_NUM_LENGTH + num * (ACL_CONFIGURATION_MAC_LENGTH *2 + ACL_CONFIGURATION_RULE_LENGTH)))
+        self.buffer[ACL_CONFIGURATION_NUM_OFFSET] = (num >> 24) & 0xFF
+        self.buffer[ACL_CONFIGURATION_NUM_OFFSET + 1] = (num >> 16) & 0xFF
+        self.buffer[ACL_CONFIGURATION_NUM_OFFSET + 2] = (num >> 8) & 0xFF
+        self.buffer[ACL_CONFIGURATION_NUM_OFFSET + 3] =  num & 0xFF
+        for i in range(0, num):
+            self.buffer[ACL_CONFIGURATION_NUM_OFFSET + 
+                               ACL_CONFIGURATION_NUM_LENGTH + 
+                               ACL_CONFIGURATION_MAC_LENGTH * 2 * i + 
+                               ACL_CONFIGURATION_RULE_LENGTH * i:
+                               ACL_CONFIGURATION_NUM_OFFSET + 
+                               ACL_CONFIGURATION_NUM_LENGTH + 
+                               ACL_CONFIGURATION_MAC_LENGTH * (2 * i + 1) + 
+                               ACL_CONFIGURATION_RULE_LENGTH * i] = bytearray(rules[i]["mac1"])
+            self.buffer[ACL_CONFIGURATION_NUM_OFFSET + 
+                               ACL_CONFIGURATION_NUM_LENGTH + 
+                               ACL_CONFIGURATION_MAC_LENGTH * (2 * i + 1) + 
+                               ACL_CONFIGURATION_RULE_LENGTH * i:
+                               ACL_CONFIGURATION_NUM_OFFSET + 
+                               ACL_CONFIGURATION_NUM_LENGTH + 
+                               ACL_CONFIGURATION_MAC_LENGTH * (2 * i + 2) + 
+                               ACL_CONFIGURATION_RULE_LENGTH * i] = bytearray(rules[i]["mac2"])
+            self.buffer[ACL_CONFIGURATION_NUM_OFFSET + 
+                               ACL_CONFIGURATION_NUM_LENGTH + 
+                               ACL_CONFIGURATION_MAC_LENGTH * (2 * i + 2) + 
+                               ACL_CONFIGURATION_RULE_LENGTH * i] = (rules[i]["rule"] >> 24) & 0xFF 
+            self.buffer[ACL_CONFIGURATION_NUM_OFFSET + 
+                               ACL_CONFIGURATION_NUM_LENGTH + 
+                               ACL_CONFIGURATION_MAC_LENGTH * (2 * i + 2) +
+                               ACL_CONFIGURATION_RULE_LENGTH * i + 1]  = (rules[i]["rule"]>> 16) & 0xFF
+            self.buffer[ACL_CONFIGURATION_NUM_OFFSET + 
+                               ACL_CONFIGURATION_NUM_LENGTH + 
+                               ACL_CONFIGURATION_MAC_LENGTH * (2 * i + 2) + 
+                               ACL_CONFIGURATION_RULE_LENGTH * i + 2]  = (rules[i]["rule"]>> 8) & 0xFF
+            self.buffer[ACL_CONFIGURATION_NUM_OFFSET + 
+                               ACL_CONFIGURATION_NUM_LENGTH + 
+                               ACL_CONFIGURATION_MAC_LENGTH * (2 * i + 2) + 
+                               ACL_CONFIGURATION_RULE_LENGTH * i + 3]  = rules[i]["rule"] & 0xFF
+    def get_buffer(self):
+        return self.buffer;

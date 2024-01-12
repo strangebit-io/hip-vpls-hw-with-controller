@@ -120,6 +120,9 @@ ether_socket.bind((hip_config.config["switch"]["l2interface"], 0))
 # Initialize FIB
 fib = FIB(hip_config.config["switch"]["mesh"])
 
+# Load MAC ACL rules
+fib.load_rules(hip_config.config["firewall"]["acl_file"])
+
 hip_config_socket = None
 
 def onclose():
@@ -171,6 +174,18 @@ def write_hosts_to_file(hosts):
     fd.close();
     hiplib.hit_resolver.load_records(hip_config.config["resolver"]["hosts_file"])
 
+def write_acl_to_file(rules):
+    fd = open(hip_config.config["firewall"]["rules_file"], "w")
+    for rule in rules:
+        mac1 = misc.Utils.mac_bytes_to_hex_formatted(rule["mac1"])
+        mac2 = misc.Utils.mac_bytes_to_hex_formatted(rule["mac2"])
+        if rule["rule"] == 1:
+            rule = "allow"
+        else:
+            rule = "deny"
+        fd.write(mac1 + " " + mac2 + " " + rule + "\n")
+    fd.close();
+    fib.load_rules(hip_config.config["firewall"]["acl_file"])
 
 def config_loop():
     buf = bytearray([])
@@ -243,6 +258,19 @@ def config_loop():
                 hosts = packet.get_hosts()
                 logging.debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                 write_hosts_to_file(hosts)
+            elif packet.get_packet_type() == Controller.ACL_CONFIGURATION_TYPE:
+                logging.debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                packet = Controller.ACLConfigurationPacket(pbuf)
+                hmac = packet.get_hmac()
+                packet.set_hmac([0]*digest.SHA256Digest.LENGTH)
+                sha256hmac = digest.SHA256HMAC(bytearray(hip_config.config["controller"]["master_secret"], encoding="ascii"))           
+                if hmac != sha256hmac.digest(packet.get_buffer()):
+                    logging.critical("Invalid HMAC in the packet")
+                    continue;
+                logging.debug("Writing to the file >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                rules = packet.get_rules()
+                logging.debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                write_acl_to_file(rules)
             else:
                 logging.debug("Invalid control-plane packet type")
 
@@ -358,6 +386,10 @@ def ether_loop():
 
             #logging.debug("----------------------------------")
             es = time()
+            
+            # Check ACL
+            if not fib.is_allowed(hexlify(src_mac).decode("ascii"), hexlify(dst_mac).decode("ascii")):
+                continue
             mesh = fib.get_next_hop(dst_mac);
             for (ihit, rhit) in mesh:
                 s = time()

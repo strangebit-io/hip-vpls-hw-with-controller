@@ -19,6 +19,7 @@ from binascii import hexlify
 class FIB():
     def __init__(self, file):
         self.fib_broadcast = [];
+        self.mac_firewall = {};
         self.fib_unicast = {};
         self.load_mesh(file);
     
@@ -33,6 +34,27 @@ class FIB():
             ihit = bytes.fromhex(ihit)
             rhit = bytes.fromhex(rhit)
             self.fib_broadcast.append((ihit, rhit));
+    
+    def load_rules(self, file):
+        self.mac_firewall = []
+        fd = open(file, "r")
+        pairs = fd.readlines();
+        for mac_pair in pairs:
+            parts = mac_pair.split(" ")
+            mac1 = parts[0].replace(":", "").strip()
+            mac2 = parts[1].replace(":", "").strip()
+            if not self.mac_firewall.get(mac1, None):
+                self.mac_firewall[mac1] = {
+                    mac2: 1
+                }
+            else:
+                self.mac_firewall[mac1][mac2] = 1
+    def is_allowed(self, mac1, mac2):
+        if not self.mac_firewall.get(mac1, None):
+            return False
+        if not self.mac_firewall[mac1].get(mac2, None):
+            return None
+        return self.mac_firewall[mac1][mac2] == 1
     
     def get_next_hop(self, dmac):
         

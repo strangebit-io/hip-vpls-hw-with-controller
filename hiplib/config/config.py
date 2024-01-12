@@ -49,7 +49,8 @@ config = {
 		"rekey_after_packets": 100                             # When to rekey the association
 	},
 	"firewall": {
-		"rules_file": "hiplib/config/rules"
+		"rules_file": "hiplib/config/rules",
+        "acl_file": "hiplib/config/acl"
 	},
     "controller": {
         "address": "1.1.1.2",                                  # Controller IP address
