@@ -36,7 +36,7 @@ class FIB():
             self.fib_broadcast.append((ihit, rhit));
     
     def load_rules(self, file):
-        self.mac_firewall = []
+        self.mac_firewall = {}
         fd = open(file, "r")
         pairs = fd.readlines();
         for mac_pair in pairs:
