@@ -34,6 +34,7 @@ import socket
 import threading
 # Logging
 import logging
+from logging.handlers import RotatingFileHandler
 # Timing
 import time
 # Math functions
@@ -93,7 +94,7 @@ logging.basicConfig(
     level=logging.DEBUG,
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[
-        #logging.FileHandler("hipls.log")#,
+        RotatingFileHandler("hipls.log"),
         logging.StreamHandler(sys.stdout)
     ]
 );
