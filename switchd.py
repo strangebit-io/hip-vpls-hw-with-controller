@@ -181,7 +181,20 @@ def config_loop():
             buf = bytearray([])
             sleep(hip_config.config["controller"]["heartbeat_interval"]);
             continue
-        buf += bytearray(hip_config_socket.recv(hip_config.config["controller"]["default_buffer"]))
+        buf_ = bytearray([])
+        try:
+            buf_ = bytearray(hip_config_socket.recv(hip_config.config["controller"]["default_buffer"]))
+            buf += buf_
+        except:
+            hip_config_socket = None
+            buf = bytearray([])
+            sleep(hip_config.config["controller"]["heartbeat_interval"]);
+            continue
+        if len(buf_) == 0:
+            hip_config_socket = None
+            buf = bytearray([])
+            sleep(hip_config.config["controller"]["heartbeat_interval"]);
+            continue
         while len(buf) >= Controller.BASIC_HEADER_OFFSET:
             packet = Controller.ControllerPacket(buf)
             logging.debug("PACKET TYPE **************************************** " + str(packet.get_packet_type()))
