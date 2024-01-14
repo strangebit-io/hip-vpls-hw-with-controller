@@ -70,6 +70,6 @@ class SecurityAssociationDatabase():
 		logging.debug("Adding record for %s - %s" % (source, destination));
 		self.db[self.key(source, destination)] = record;
 	def get_record(self, source, destination):
-		return self.db[self.key(source, destination)];
+		return self.db.get(self.key(source, destination), None);
 	def delete_record(self):
 		del self.db[self.key(source, destination)];

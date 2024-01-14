@@ -2063,6 +2063,8 @@ class HIPLib():
             #logging.debug("Got packet from %s to %s of %d bytes" % (src_str, dst_str, len(buf)));
             # Get SA record and construct the ESP payload
             sa_record   = self.ip_sec_sa.get_record(src_str, dst_str);
+            if not sa_record:
+                return None 
             hmac_alg    = sa_record.get_hmac_alg();
             cipher      = sa_record.get_aes_alg();
             hmac_key    = sa_record.get_hmac_key();
