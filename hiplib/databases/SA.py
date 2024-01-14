@@ -71,5 +71,5 @@ class SecurityAssociationDatabase():
 		self.db[self.key(source, destination)] = record;
 	def get_record(self, source, destination):
 		return self.db.get(self.key(source, destination), None);
-	def delete_record(self):
+	def delete_record(self, source, destination):
 		del self.db[self.key(source, destination)];
