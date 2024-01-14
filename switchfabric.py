@@ -43,17 +43,21 @@ class FIB():
             parts = mac_pair.split(" ")
             mac1 = parts[0].replace(":", "").strip()
             mac2 = parts[1].replace(":", "").strip()
+            rule = parts[2].strip();
+            mask = 1
+            if rule != "allow":
+                mask = 0
             if not self.mac_firewall.get(mac1, None):
                 self.mac_firewall[mac1] = {
-                    mac2: 1
+                    mac2: mask
                 }
             else:
-                self.mac_firewall[mac1][mac2] = 1
+                self.mac_firewall[mac1][mac2] = mask
     def is_allowed(self, mac1, mac2):
         if not self.mac_firewall.get(mac1, None):
             return False
         if not self.mac_firewall[mac1].get(mac2, None):
-            return None
+            return False
         return self.mac_firewall[mac1][mac2] == 1
     
     def get_next_hop(self, dmac):
