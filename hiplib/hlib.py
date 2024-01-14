@@ -197,6 +197,10 @@ class HIPLib():
             ihit = hip_packet.get_senders_hit();
             rhit = hip_packet.get_receivers_hit();
 
+            if not self.firewall.allow(Utils.ipv6_bytes_to_hex_formatted_resolver(ihit), Utils.ipv6_bytes_to_hex_formatted_resolver(rhit)):
+                logging.critical("Blocked by firewall...")
+                return [];
+
             #logging.info("Got HIP packet");
             #logging.info("Responder's HIT %s" % Utils.ipv6_bytes_to_hex_formatted(rhit));
             #logging.info("Our own HIT %s " % Utils.ipv6_bytes_to_hex_formatted(own_hit));
@@ -427,7 +431,7 @@ class HIPLib():
                 # Stay in current state
             elif hip_packet.get_packet_type() == HIP.HIP_R1_PACKET:
                 logging.info("R1 packet");
-
+            
                 # 1 0 1
                 # 1 1 1
                 if (hip_state.is_unassociated() 
