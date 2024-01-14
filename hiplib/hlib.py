@@ -511,8 +511,10 @@ class HIPLib():
                         
                         # Calculate to make firewall verification secure...
                         if ihit != repsonder_hit_calculated:
-                            raise Exception("Invalid respnders HIT")
-                        
+                            raise Exception("Invalid source HIT")
+                        if rhit != self.own_hit:
+                            raise Exception("Invalid destination HIT")
+                            
                         oga = HIT.get_responders_oga_id(ihit);
                         logging.debug("Responder's OGA ID %d" % (oga));
                         logging.debug(bytearray(responder_hi.to_byte_array()));
@@ -1007,6 +1009,12 @@ class HIPLib():
                         oga = HIT.get_responders_oga_id(ihit);
                         logging.debug("OGA ID %d " % (oga));
                         responders_hit = HIT.get(responder_hi.to_byte_array(), oga);
+
+                        if ihit != responders_hit:
+                            raise Exception("Invalid source HIT")
+                        if rhit != self.own_hit:
+                            raise Exception("Invalid destination HIT")
+                        
                         logging.debug(list(rhit));
                         logging.debug(list(ihit));
                         logging.debug(list(responders_hit));
