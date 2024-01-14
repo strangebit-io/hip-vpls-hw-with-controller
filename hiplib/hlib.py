@@ -437,6 +437,7 @@ class HIPLib():
                     return;
 
                 oga = HIT.get_responders_oga_id(ihit);
+                
 
                 if (oga << 4) not in self.config["security"]["supported_hit_suits"]:
                     logging.critical("Unsupported HIT suit");
@@ -498,13 +499,20 @@ class HIPLib():
                         # Check the algorithm and construct the HI based on the proposed algorithm
                         if hi_param.get_algorithm() == 0x5: #RSA
                             responder_hi = RSAHostID.from_byte_buffer(hi_param.get_host_id());
+                            repsonder_hit_calculated = HIT.get(responder_hi.to_byte_array(), HIT.SHA256_OGA)
                         elif hi_param.get_algorithm() == 0x7: #ECDSA
                             responder_hi = ECDSAHostID.from_byte_buffer(hi_param.get_host_id());
+                            repsonder_hit_calculated = HIT.get(responder_hi.to_byte_array(), HIT.SHA384_OGA)
                         elif hi_param.get_algorithm() == 0x9: #ECDSA LOW
                             responder_hi = ECDSALowHostID.from_byte_buffer(hi_param.get_host_id());
+                            repsonder_hit_calculated = HIT.get(responder_hi.to_byte_array(), HIT.SHA1_OGA)
                         else:
                             raise Exception("Invalid signature algorithm");
-
+                        
+                        # Calculate to make firewall verification secure...
+                        if ihit != repsonder_hit_calculated:
+                            raise Exception("Invalid respnders HIT")
+                        
                         oga = HIT.get_responders_oga_id(ihit);
                         logging.debug("Responder's OGA ID %d" % (oga));
                         logging.debug(bytearray(responder_hi.to_byte_array()));
