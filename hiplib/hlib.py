@@ -253,13 +253,18 @@ class HIPLib():
                     return [];
 
                 if Utils.is_hit_smaller(rhit, ihit):
+                    sv = HIPState.StateVariables(hip_state.get_state(), ihit, rhit, dst, src)
                     self.state_variables.save(Utils.ipv6_bytes_to_hex_formatted(rhit),
                         Utils.ipv6_bytes_to_hex_formatted(ihit),
-                        HIPState.StateVariables(hip_state.get_state(), ihit, rhit, dst, src))
+                        sv)
+                    
+                    sv.is_responder = True;
                 else:
+                    sv = HIPState.StateVariables(hip_state.get_state(), ihit, rhit, dst, src)
                     self.state_variables.save(Utils.ipv6_bytes_to_hex_formatted(ihit),
                         Utils.ipv6_bytes_to_hex_formatted(rhit),
-                        HIPState.StateVariables(hip_state.get_state(), ihit, rhit, dst, src))
+                        sv)
+                    sv.is_responder = True;
 
                 #st = time.time();
                 
@@ -1209,7 +1214,7 @@ class HIPLib():
                     oga = HIT.get_responders_oga_id(rhit);
                     responders_hit = HIT.get(responder_hi.to_byte_array(), oga);
                     if not Utils.hits_equal(ihit, responders_hit):
-                        logging.critical("Not our HIT");
+                        logging.critical("Invalid HIT");
                         raise Exception("Invalid HIT");
                     
                     if isinstance(responder_hi, RSAHostID): #RSA
