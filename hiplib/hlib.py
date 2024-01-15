@@ -157,6 +157,10 @@ class HIPLib():
         self.hip_state_machine = HIPState.StateMachine();
         self.keymat_storage    = HIPState.Storage();
         self.dh_storage        = HIPState.Storage();
+        self.dh_storage_I2     = HIPState.Storage();
+        self.dh_storage_R1     = HIPState.Storage();
+        self.j_storage         = HIPState.Storage();
+        self.i_storage         = HIPState.Storage();
         self.cipher_storage    = HIPState.Storage();
         self.pubkey_storage    = HIPState.Storage();
         self.state_variables   = HIPState.Storage();
@@ -183,6 +187,9 @@ class HIPLib():
 
             src = ipv4_packet.get_source_address();
             dst = ipv4_packet.get_destination_address();
+
+            dst_str = Utils.ipv4_bytes_to_string(dst);
+            src_str = Utils.ipv4_bytes_to_string(src);
 
             if ipv4_packet.get_protocol() != HIP.HIP_PROTOCOL:
                 logging.debug("Invalid protocol type");
@@ -251,6 +258,8 @@ class HIPLib():
                 if hip_state.is_i1_sent() and Utils.is_hit_smaller(rhit, ihit):
                     logging.debug("Staying in I1-SENT state");
                     return [];
+            
+                logging.debug(">>>>>>>>>>>>>>>>>>>> STATE >>>>>>>>>>> %d" % hip_state.get_state())
 
                 if Utils.is_hit_smaller(rhit, ihit):
                     sv = HIPState.StateVariables(hip_state.get_state(), ihit, rhit, dst, src)
@@ -323,6 +332,8 @@ class HIPLib():
                 else:
                     self.dh_storage.save(Utils.ipv6_bytes_to_hex_formatted(ihit), 
                         Utils.ipv6_bytes_to_hex_formatted(rhit), dh);
+                
+                logging.debug("SAVING DH STORAGE ----------------- I1 PACKET (%s, %s)" % (src_str, dst_str))
                 
 
                 dh_param = HIP.DHParameter();
@@ -701,6 +712,8 @@ class HIPLib():
                         Utils.ipv6_bytes_to_hex_formatted(rhit), dh);
                 #dh_storage.save(Utils.ipv6_bytes_to_hex_formatted(ihit), 
                 #	Utils.ipv6_bytes_to_hex_formatted(rhit), dh);
+
+                logging.debug("SAVING DH STORAGE ----------------- R1 PACKET (%s, %s)" % (src_str, dst_str))
 
                 info = Utils.sort_hits(ihit, rhit);
                 salt = irandom + jrandom;
@@ -1118,7 +1131,7 @@ class HIPLib():
                 jrandom = solution_param.get_solution(r_hash.LENGTH);
                 irandom = solution_param.get_random(r_hash.LENGTH);
                 if not PuzzleSolver.verify_puzzle(
-                    irandom, 
+                     irandom, 
                     jrandom, 
                     hip_packet.get_senders_hit(), 
                     hip_packet.get_receivers_hit(), 
@@ -1462,7 +1475,6 @@ class HIPLib():
                         Utils.ipv6_bytes_to_hex_formatted(rhit));
                 
                 sv.ec_complete_timeout = time.time() + self.config["general"]["EC"];
-
             elif hip_packet.get_packet_type() == HIP.HIP_R2_PACKET:
                 
                 if (hip_state.is_unassociated() 
