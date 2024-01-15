@@ -258,13 +258,13 @@ class HIPLib():
                         Utils.ipv6_bytes_to_hex_formatted(ihit),
                         sv)
                     
-                    #sv.is_responder = True;
+                    sv.is_responder = True;
                 else:
                     sv = HIPState.StateVariables(hip_state.get_state(), ihit, rhit, dst, src)
                     self.state_variables.save(Utils.ipv6_bytes_to_hex_formatted(ihit),
                         Utils.ipv6_bytes_to_hex_formatted(rhit),
                         sv)
-                    #sv.is_responder = True;
+                    sv.is_responder = True;
 
                 #st = time.time();
                 
