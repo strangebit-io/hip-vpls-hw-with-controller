@@ -441,7 +441,10 @@ class HIPLib():
                 # 1 1 1
                 if (hip_state.is_unassociated() 
                     or hip_state.is_r2_sent() 
-                    or hip_state.is_established()):
+                    or hip_state.is_established()
+                    or hip_state.is_closing()
+                    or hip_state.is_closed()
+                    or hip_state.is_failed()):
                     logging.debug("Dropping packet...");
                     return;
 
@@ -966,6 +969,10 @@ class HIPLib():
                 logging.info("I2 packet");
                 st = time.time();
 
+                if hip_state.is_i2_sent() and Utils.is_hit_smaller(rhit, ihit):
+                    logging.debug("Staying in I2-SENT state. Dropping the packet...");
+                    return [];
+
                 solution_param     = None;
                 r1_counter_param   = None;
                 dh_param           = None;
@@ -1266,7 +1273,7 @@ class HIPLib():
                 hmac = HMACFactory.get(hmac_alg, hmac_key);
 
                 if hmac.digest(buf) != mac_param.get_hmac():
-                    logging.critical("Invalid HMAC. Dropping the packet");
+                    logging.critical("Invalid HMAC (I2). Dropping the packet");
                     return [];
 
                 # Compute signature here
@@ -1535,7 +1542,7 @@ class HIPLib():
                 hip_r2_packet.add_parameter(esp_info_param);
 
                 if hmac.digest(hip_r2_packet.get_buffer()) != hmac_param.get_hmac():
-                    logging.critical("Invalid HMAC. Dropping the packet");
+                    logging.critical("Invalid HMAC (R2). Dropping the packet");
                     return [];
                 else:
                     logging.debug("HMAC is ok. return with signature");
@@ -1729,7 +1736,7 @@ class HIPLib():
                 buf = hip_update_packet.get_buffer() + buf;
 
                 if hmac.digest(bytearray(buf)) != mac_param.get_hmac():
-                    logging.critical("Invalid HMAC. Dropping the packet");
+                    logging.critical("Invalid HMAC (UPDATE packet). Dropping the packet");
                     return [];
 
                 responders_public_key = self.pubkey_storage.get(Utils.ipv6_bytes_to_hex_formatted(ihit), 
@@ -1938,7 +1945,7 @@ class HIPLib():
                 logging.debug("------------------------------------");
 
                 if hmac.digest(bytearray(buf)) != mac_param.get_hmac():
-                    logging.critical("Invalid HMAC. Dropping the packet");
+                    logging.critical("Invalid HMAC (CLOSE). Dropping the packet");
                     return [];
                 logging.debug("HMAC OK");
 
