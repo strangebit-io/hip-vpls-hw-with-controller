@@ -261,6 +261,7 @@ class HIPLib():
             
                 logging.debug(">>>>>>>>>>>>>>>>>>>> STATE >>>>>>>>>>> %d" % hip_state.get_state())
 
+                sv = None
                 if Utils.is_hit_smaller(rhit, ihit):
                     sv = HIPState.StateVariables(hip_state.get_state(), ihit, rhit, dst, src)
                     self.state_variables.save(Utils.ipv6_bytes_to_hex_formatted(rhit),
@@ -290,6 +291,11 @@ class HIPLib():
                 hip_r1_packet.set_version(HIP.HIP_VERSION);
 
                 r_hash = HIT.get_responders_hash_algorithm(rhit);
+
+                # R1 Counter 
+                r1counter_param = HIP.R1CounterParameter()
+                #sv.r1_counter += 1
+                #r1counter_param.set_counter(sv.r1_counter)
 
                 # Prepare puzzle
                 irandom = PuzzleSolver.generate_irandom(r_hash.LENGTH);
@@ -399,6 +405,7 @@ class HIPLib():
                 # Add parameters to R1 packet (order is important)
                 hip_r1_packet.set_length(HIP.HIP_DEFAULT_PACKET_LENGTH);
                 # List of mandatory parameters in R1 packet...
+                
                 puzzle_param.set_random(irandom, r_hash.LENGTH);
                 puzzle_param.set_opaque(bytearray(Utils.generate_random(2)));
                 hip_r1_packet.add_parameter(puzzle_param);
@@ -453,8 +460,8 @@ class HIPLib():
                 if (hip_state.is_unassociated() 
                     or hip_state.is_r2_sent() 
                     or hip_state.is_established()
-                    or hip_state.is_closing()
-                    or hip_state.is_closed()
+                    #or hip_state.is_closing()
+                    #or hip_state.is_closed()
                     or hip_state.is_failed()):
                     logging.debug("Dropping packet...");
                     return;
@@ -703,6 +710,7 @@ class HIPLib():
                 shared_secret = dh.compute_shared_secret(public_key_r);
 
                 logging.debug("Secret key %d" % shared_secret);
+                logging.debug("Secret key %d %s %s" % (shared_secret, src_str, dst_str));
 
                 if Utils.is_hit_smaller(rhit, ihit):
                     self.dh_storage.save(Utils.ipv6_bytes_to_hex_formatted(rhit), 
@@ -1152,7 +1160,7 @@ class HIPLib():
 
                 public_key_r = dh.decode_public_key(dh_param.get_public_value());
                 shared_secret = dh.compute_shared_secret(public_key_r);
-                logging.debug("Secret key %d" % shared_secret);
+                logging.debug("Secret key %d %s %s" % (shared_secret, src_str, dst_str));
 
                 info = Utils.sort_hits(ihit, rhit);
                 salt = irandom + jrandom;
@@ -1861,7 +1869,7 @@ class HIPLib():
                     hip_state.established();
             elif hip_packet.get_packet_type() == HIP.HIP_NOTIFY_PACKET:
                 logging.info("NOTIFY packet");
-                if hip_state.is_i1_sent() or hip_state.is_i2_sent() or hip_state.is_unassociated():
+                if hip_state.is_i1_sent() or hip_state.is_i2_sent() or hip_state.is_unassociated() or hip_state.is_closing() or hip_state.closed():
                     logging.debug("Dropping the packet...")
                     return [];
                 # process the packet...
@@ -2069,7 +2077,7 @@ class HIPLib():
                     sv.closed_timeout = time.time() + self.config["general"]["UAL"] + 2*self.config["general"]["MSL"];
             elif hip_packet.get_packet_type == HIP.HIP_CLOSE_ACK_PACKET:
                 logging.info("CLOSE ACK packet");
-                if hip_state.is_r2_sent() or hip_state.is_established() or hip_state.is_i1_sent() or hip_state.is_i2_sent() or hip_state.is_unassociated():
+                if hip_state.is_r2_sent() or hip_state.is_established() or hip_state.is_i1_sent() or hip_state.is_i2_sent() or hip_state.is_unassociated() or hip_state.is_closing():
                     logging.debug("Dropping packet");
                     return [];
                 if hip_state.is_closing() or hip_state.is_closed():
@@ -2768,6 +2776,8 @@ class HIPLib():
                     logging.debug("Re-sending I1 packet from %s" % (src_str));
                     logging.debug("Reponder's HIT %s " % (Utils.ipv6_bytes_to_hex_formatted(sv.rhit)))
                     logging.debug("Initiator's HIT %s " % (Utils.ipv6_bytes_to_hex_formatted(sv.ihit)))
+                    logging.debug("I2 packet buffer------------")
+                    logging.debug(ipv4_packet.get_buffer())
 
                     #hip_socket.sendto(bytearray(ipv4_packet.get_buffer()), (dst_str.strip(), 0))
                     response.append((bytearray(ipv4_packet.get_buffer()), (dst_str.strip(), 0)))
