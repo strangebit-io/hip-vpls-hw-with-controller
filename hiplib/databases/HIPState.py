@@ -105,6 +105,7 @@ class StateVariables():
 		self.dst   = dst;
 		self.timer = time.time();
 		self.update_timeout = time.time() + DEFAULT_TIMEOUT_SECONDS;
+		self.r1_counter = 0;
 		self.i1_timeout = time.time() + DEFAULT_TIMEOUT_SECONDS;
 		self.i1_retries = 0;
 		self.i2_timeout = time.time() + DEFAULT_TIMEOUT_SECONDS;
