@@ -854,7 +854,10 @@ class HIPLib():
                 hip_i2_packet.set_length(int(packet_length / 8));
                 buf = hip_i2_packet.get_buffer() + buf;
                 
-                (aes_key, hmac_key) = Utils.get_keys(keymat, hmac_alg, selected_cipher, ihit, rhit);
+
+                # R1 packet incomming, IHIT - sender (Initiator), RHIT - own HIT (responder)
+                # From this two we need to choose
+                (aes_key, hmac_key) = Utils.get_keys(keymat, hmac_alg, selected_cipher, rhit, ihit);
                 hmac = HMACFactory.get(hmac_alg, hmac_key);
                 mac_param.set_hmac(hmac.digest(bytearray(buf)));
 
@@ -982,6 +985,7 @@ class HIPLib():
                 else:
                     sv = self.state_variables.get(Utils.ipv6_bytes_to_hex_formatted(ihit),
                         Utils.ipv6_bytes_to_hex_formatted(rhit));
+                logging.debug("....SAVING I2 PACKET INTO THE MEMEORY.....")
                 sv.i2_packet = ipv4_packet;
 
                 if hip_state.is_i1_sent() or hip_state.is_closing() or hip_state.is_closed():
@@ -1220,6 +1224,7 @@ class HIPLib():
                 #	Utils.ipv6_bytes_to_hex_formatted(rhit), selected_cipher);
 
                 if encrypted_param:
+                    # I2 packet incomming, IHIT - sender (Initiator), RHIT - own HIT (responder)
                     (aes_key, hmac_key) = Utils.get_keys(keymat, hmac_alg, selected_cipher, ihit, rhit);
                     cipher = SymmetricCiphersFactory.get(selected_cipher);
                     iv_length = cipher.BLOCK_SIZE;
@@ -1290,7 +1295,8 @@ class HIPLib():
                 hip_i2_packet.set_length(int(packet_length / 8));
                 buf = hip_i2_packet.get_buffer() + buf;
                 
-                (aes_key, hmac_key) = Utils.get_keys(keymat, hmac_alg, selected_cipher, rhit, ihit);
+                # I2 packet incomming, IHIT - sender (Initiator), RHIT - own HIT (responder)
+                (aes_key, hmac_key) = Utils.get_keys(keymat, hmac_alg, selected_cipher, ihit, rhit);
                 hmac = HMACFactory.get(hmac_alg, hmac_key);
 
                 if hmac.digest(buf) != mac_param.get_hmac():
@@ -1363,7 +1369,8 @@ class HIPLib():
 
                 hip_r2_packet.add_parameter(esp_info_param);
 
-                (aes_key, hmac_key) = Utils.get_keys(keymat, hmac_alg, selected_cipher, ihit, rhit);
+                # R2 packet outgoing, IHIT - sender (Initiator), RHIT - own HIT (responder), IHIT - 1, RHIT - 2
+                (aes_key, hmac_key) = Utils.get_keys(keymat, hmac_alg, selected_cipher, rhit, ihit);
                 hmac = HMACFactory.get(hmac_alg, hmac_key);
 
                 mac_param = HIP.MAC2Parameter();
@@ -1516,8 +1523,8 @@ class HIPLib():
 
                 #keymat = keymat_storage.get(Utils.ipv6_bytes_to_hex_formatted(ihit), 
                 #	Utils.ipv6_bytes_to_hex_formatted(rhit));
-
-                (aes_key, hmac_key) = Utils.get_keys(keymat, hmac_alg, cipher_alg, rhit, ihit);
+                # R2 packet incomming, IHIT - sender (Responder), RHIT - own HIT (Initiator)
+                (aes_key, hmac_key) = Utils.get_keys(keymat, hmac_alg, cipher_alg, ihit, rhit);
                 hmac = HMACFactory.get(hmac_alg, hmac_key);
                 parameters       = hip_packet.get_parameters();
                 
@@ -1704,7 +1711,12 @@ class HIPLib():
                     cipher_alg = self.cipher_storage.get(Utils.ipv6_bytes_to_hex_formatted(ihit), 
                         Utils.ipv6_bytes_to_hex_formatted(rhit));
 
+                #if sv.is_responder:
+                # UPDATE packet incomming, IHIT - sender (Initiator), RHIT - own HIT (responder)
                 (aes_key, hmac_key) = Utils.get_keys(keymat, hmac_alg, cipher_alg, ihit, rhit);
+                #else:
+                #(aes_key, hmac_key) = Utils.get_keys(keymat, hmac_alg, cipher_alg, rhit, ihit);
+                
                 hmac = HMACFactory.get(hmac_alg, hmac_key);
 
                 for parameter in parameters:
@@ -1798,7 +1810,14 @@ class HIPLib():
                     logging.debug("This is a response to a UPDATE. Skipping pong...");
                     return [];
 
+                #(aes_key, hmac_key) = Utils.get_keys(keymat, hmac_alg, cipher_alg, rhit, ihit);
+                
+                #if sv.is_responder:
+                #(aes_key, hmac_key) = Utils.get_keys(keymat, hmac_alg, cipher_alg, ihit, rhit);
+                #else:
+                # UPDATE ACK packet outgoing, RHIT - own HIT (Initiator), IHIT - recipient
                 (aes_key, hmac_key) = Utils.get_keys(keymat, hmac_alg, cipher_alg, rhit, ihit);
+                
                 hmac = HMACFactory.get(hmac_alg, hmac_key);
 
                 hip_update_packet = HIP.UpdatePacket();
@@ -1919,6 +1938,11 @@ class HIPLib():
                 logging.debug("Cipher algorithm %d " % (cipher_alg));
                 logging.debug("HMAC algorithm %d" % (hmac_alg));
 
+                #(aes_key, hmac_key) = Utils.get_keys(keymat, hmac_alg, cipher_alg, ihit, rhit);
+                #if sv.is_responder:
+                #(aes_key, hmac_key) = Utils.get_keys(keymat, hmac_alg, cipher_alg, ihit, rhit);
+                #else:
+                # CLOSE packet incomming, IHIT - sender (Initiator), RHIT - own HIT (responder)
                 (aes_key, hmac_key) = Utils.get_keys(keymat, hmac_alg, cipher_alg, ihit, rhit);
                 hmac = HMACFactory.get(hmac_alg, hmac_key);
 
@@ -2001,7 +2025,11 @@ class HIPLib():
                 else:
                     logging.debug("Signature is correct");
 
-                (aes_key, hmac_key) = Utils.get_keys(keymat, hmac_alg, cipher_alg, rhit, ihit);
+                #(aes_key, hmac_key) = Utils.get_keys(keymat, hmac_alg, cipher_alg, rhit, ihit);
+                if sv.is_responder:
+                    (aes_key, hmac_key) = Utils.get_keys(keymat, hmac_alg, cipher_alg, ihit, rhit);
+                else:
+                    (aes_key, hmac_key) = Utils.get_keys(keymat, hmac_alg, cipher_alg, rhit, ihit);
                 hmac = HMACFactory.get(hmac_alg, hmac_key);
 
                 hip_close_ack_packet = HIP.CloseAckPacket();
@@ -2743,8 +2771,17 @@ class HIPLib():
 
                     # Create I1 packet
                     hip_i1_packet = HIP.I1Packet();
-                    hip_i1_packet.set_senders_hit(sv.ihit);
-                    hip_i1_packet.set_receivers_hit(sv.rhit);
+                    
+                    if sv.is_responder:
+                        hip_i1_packet.set_senders_hit(sv.rhit);
+                        hip_i1_packet.set_receivers_hit(sv.ihit);
+                        logging.debug("Source HIT %s " % (Utils.ipv6_bytes_to_hex_formatted(sv.rhit)))
+                        logging.debug("Destination HIT %s " % (Utils.ipv6_bytes_to_hex_formatted(sv.ihit)))
+                    else:
+                        hip_i1_packet.set_senders_hit(sv.ihit);
+                        hip_i1_packet.set_receivers_hit(sv.rhit);
+                        logging.debug("Source HIT %s " % (Utils.ipv6_bytes_to_hex_formatted(sv.ihit)))
+                        logging.debug("Destination HIT %s " % (Utils.ipv6_bytes_to_hex_formatted(sv.rhit)))
                     hip_i1_packet.set_next_header(HIP.HIP_IPPROTO_NONE);
                     hip_i1_packet.set_version(HIP.HIP_VERSION);
                     hip_i1_packet.add_parameter(dh_groups_param);
@@ -2795,6 +2832,11 @@ class HIPLib():
                     logging.debug("Reponder's HIT %s " % (Utils.ipv6_bytes_to_hex_formatted(sv.rhit)))
                     logging.debug("Initiator's HIT %s " % (Utils.ipv6_bytes_to_hex_formatted(sv.ihit)))
                     #hip_socket.sendto(bytearray(sv.i2_packet.get_buffer()), (dst_str.strip(), 0))
+                    logging.debug("IS SV")
+                    logging.debug(sv)
+                    logging.debug("**************************************************************")
+                    logging.debug(sv.i2_packet.get_buffer())
+
                     response.append((bytearray(sv.i2_packet.get_buffer()), (dst_str.strip(), 0)))
                     sv.i2_retries += 1;
                     if sv.i2_retries > self.config["general"]["i2_retries"]:
@@ -2842,10 +2884,22 @@ class HIPLib():
 
                     logging.debug("HMAC algorithm %d" % (hmac_alg));
                     hmac = HMACFactory.get(hmac_alg, hmac_key);
-
+                    
                     hip_close_packet = HIP.ClosePacket();
-                    hip_close_packet.set_senders_hit(sv.ihit);
-                    hip_close_packet.set_receivers_hit(sv.rhit);
+
+                    if sv.is_responder:
+                        hip_close_packet.set_senders_hit(sv.rhit);
+                        hip_close_packet.set_receivers_hit(sv.ihit);
+                        logging.debug("Source HIT %s " % (Utils.ipv6_bytes_to_hex_formatted(sv.rhit)))
+                        logging.debug("Destination HIT %s " % (Utils.ipv6_bytes_to_hex_formatted(sv.ihit)))
+                    else:
+                        hip_close_packet.set_senders_hit(sv.ihit);
+                        hip_close_packet.set_receivers_hit(sv.rhit);
+                        logging.debug("Source HIT %s " % (Utils.ipv6_bytes_to_hex_formatted(sv.ihit)))
+                        logging.debug("Destination HIT %s " % (Utils.ipv6_bytes_to_hex_formatted(sv.rhit)))
+
+                    #hip_close_packet.set_senders_hit(sv.ihit);
+                    #hip_close_packet.set_receivers_hit(sv.rhit);
                     hip_close_packet.set_next_header(HIP.HIP_IPPROTO_NONE);
                     hip_close_packet.set_version(HIP.HIP_VERSION);
                     hip_close_packet.set_length(HIP.HIP_DEFAULT_PACKET_LENGTH);
