@@ -1562,7 +1562,7 @@ class HIPLib():
                     keymat_index, 
                     hmac.ALG_ID, 
                     cipher.ALG_ID, 
-                    rhit, ihit);
+                    ihit, rhit);
                 sa_record = SA.SecurityAssociationRecord(cipher.ALG_ID, hmac.ALG_ID, cipher_key, hmac_key, src, dst);
                 sa_record.set_spi(responders_spi);
                 self.ip_sec_sa.add_record(Utils.ipv6_bytes_to_hex_formatted(rhit), 
@@ -1574,7 +1574,7 @@ class HIPLib():
                     keymat_index, 
                     hmac.ALG_ID, 
                     cipher.ALG_ID, 
-                    ihit, rhit);
+                    rhit, ihit);
                 sa_record = SA.SecurityAssociationRecord(cipher.ALG_ID, hmac.ALG_ID, cipher_key, hmac_key, rhit, ihit);
                 sa_record.set_spi(initiators_spi);
                 self.ip_sec_sa.add_record(dst_str, src_str, sa_record);
