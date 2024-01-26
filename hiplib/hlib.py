@@ -1942,13 +1942,13 @@ class HIPLib():
 
                 #if sv.is_responder:
                 # UPDATE packet incomming, IHIT - sender (Initiator), RHIT - own HIT (responder)
-                if sv.is_responder:
-                    (aes_key, hmac_key) = Utils.get_keys(keymat, hmac_alg, cipher_alg, sv.ihit, sv.rhit);
-                else:
-                    (aes_key, hmac_key) = Utils.get_keys(keymat, hmac_alg, cipher_alg, sv.rhit, sv.ihit);
+                #if sv.is_responder:
+                #    (aes_key, hmac_key) = Utils.get_keys(keymat, hmac_alg, cipher_alg, sv.ihit, sv.rhit);
+                #else:
+                #    (aes_key, hmac_key) = Utils.get_keys(keymat, hmac_alg, cipher_alg, sv.rhit, sv.ihit);
                 #else:
                 #(aes_key, hmac_key) = Utils.get_keys(keymat, hmac_alg, cipher_alg, rhit, ihit);
-                
+                (aes_key, hmac_key) = Utils.get_keys(keymat, hmac_alg, cipher_alg, ihit, rhit);
                 hmac = HMACFactory.get(hmac_alg, hmac_key);
 
                 for parameter in parameters:
@@ -2050,11 +2050,12 @@ class HIPLib():
                 # UPDATE ACK packet outgoing, RHIT - own HIT (Initiator), IHIT - recipient
                 #(aes_key, hmac_key) = Utils.get_keys(keymat, hmac_alg, cipher_alg, sv.rhit, sv.ihit);
             
-                if sv.is_responder:
-                    (aes_key, hmac_key) = Utils.get_keys(keymat, hmac_alg, cipher_alg, sv.rhit, sv.ihit);
-                else:
-                    (aes_key, hmac_key) = Utils.get_keys(keymat, hmac_alg, cipher_alg, sv.ihit, sv.rhit);
-                
+                #if sv.is_responder:
+                #    (aes_key, hmac_key) = Utils.get_keys(keymat, hmac_alg, cipher_alg, sv.rhit, sv.ihit);
+                #else:
+                #    (aes_key, hmac_key) = Utils.get_keys(keymat, hmac_alg, cipher_alg, sv.ihit, sv.rhit);
+                (aes_key, hmac_key) = Utils.get_keys(keymat, hmac_alg, cipher_alg, rhit, ihit);
+
                 hmac = HMACFactory.get(hmac_alg, hmac_key);
 
                 hip_update_packet = HIP.UpdatePacket();
@@ -2957,6 +2958,7 @@ class HIPLib():
                         (aes_key, hmac_key) = Utils.get_keys(keymat, hmac_alg, cipher_alg, sv.rhit, sv.ihit);
                     else:
                         (aes_key, hmac_key) = Utils.get_keys(keymat, hmac_alg, cipher_alg, sv.ihit, sv.rhit);
+                    
                     hmac = HMACFactory.get(hmac_alg, hmac_key);
 
                     hip_update_packet = HIP.UpdatePacket();
