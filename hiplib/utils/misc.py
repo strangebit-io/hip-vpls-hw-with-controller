@@ -358,7 +358,7 @@ class Utils():
 		
 		#offset = 2*(hmac.LENGTH + cipher.KEY_SIZE_BITS);
 		offset = keymat_index;
-		if ihit > rhit:
+		if ihit < rhit:
 			offset += (hmac.LENGTH + cipher.KEY_SIZE_BITS);
 		return (keymat[offset: offset + cipher.KEY_SIZE_BITS], \
 			keymat[offset + cipher.KEY_SIZE_BITS: offset + cipher.KEY_SIZE_BITS + hmac.LENGTH]);
