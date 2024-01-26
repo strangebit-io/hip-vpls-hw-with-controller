@@ -2904,6 +2904,8 @@ class HIPLib():
             elif hip_state.is_i1_sent():
                 if time.time() >= sv.i1_timeout:
                     sv.i1_timeout = time.time() + self.config["general"]["i1_timeout_s"];
+                    
+
                     dh_groups_param = HIP.DHGroupListParameter();
                     dh_groups_param.add_groups(self.config["security"]["supported_DH_groups"]);
 
@@ -2913,6 +2915,8 @@ class HIPLib():
                     if sv.is_responder:
                         hip_i1_packet.set_senders_hit(sv.rhit);
                         hip_i1_packet.set_receivers_hit(sv.ihit);
+                        sv.ihit = sv.rhit
+                        sv.rhit = sv.ihit
                         logging.debug("Source HIT %s " % (Utils.ipv6_bytes_to_hex_formatted(sv.rhit)))
                         logging.debug("Destination HIT %s " % (Utils.ipv6_bytes_to_hex_formatted(sv.ihit)))
                     else:
@@ -2920,6 +2924,7 @@ class HIPLib():
                         hip_i1_packet.set_receivers_hit(sv.rhit);
                         logging.debug("Source HIT %s " % (Utils.ipv6_bytes_to_hex_formatted(sv.ihit)))
                         logging.debug("Destination HIT %s " % (Utils.ipv6_bytes_to_hex_formatted(sv.rhit)))
+                    sv.is_responder = False;
                     hip_i1_packet.set_next_header(HIP.HIP_IPPROTO_NONE);
                     hip_i1_packet.set_version(HIP.HIP_VERSION);
                     hip_i1_packet.add_parameter(dh_groups_param);
