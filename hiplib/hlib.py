@@ -504,7 +504,7 @@ class HIPLib():
                             Utils.ipv6_bytes_to_hex_formatted(ihit))
                     
                     if not sv:
-                        sv = HIPState.StateVariables(hip_state.get_state(), ihit, rhit, dst, src)
+                        sv = HIPState.StateVariables(hip_state.get_state(), rhit, ihit, dst, src)
                      
                         self.state_variables.save(Utils.ipv6_bytes_to_hex_formatted(rhit),
                             Utils.ipv6_bytes_to_hex_formatted(ihit),
@@ -522,7 +522,7 @@ class HIPLib():
                             Utils.ipv6_bytes_to_hex_formatted(rhit))
                             
                     if not sv:
-                        sv = HIPState.StateVariables(hip_state.get_state(), ihit, rhit, dst, src)
+                        sv = HIPState.StateVariables(hip_state.get_state(), rhit, ihit, dst, src)
                         self.state_variables.save(Utils.ipv6_bytes_to_hex_formatted(ihit),
                             Utils.ipv6_bytes_to_hex_formatted(rhit),
                             sv)
@@ -892,7 +892,7 @@ class HIPLib():
                 keymat = Utils.kdf(hmac_alg, salt, Math.int_to_bytes(shared_secret), info, keymat_length_in_octets);
 
                 logging.debug("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                logging.debug("------ SAVING KEYMAT IN R1 -------")
+                logging.debug("------ SAVING KEYMAT IN R1 ------- %s %s" % (src_str, dst_str))
                 logging.debug("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                 #if Utils.is_hit_smaller(rhit, ihit):
                 #    #self.keymat_storage.save(Utils.ipv6_bytes_to_hex_formatted(rhit), 
@@ -1385,7 +1385,7 @@ class HIPLib():
                 keymat = Utils.kdf(hmac_alg, salt, Math.int_to_bytes(shared_secret), info, keymat_length_in_octets);
 
                 logging.debug("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                logging.debug("------ SAVING KEYMAT IN I2 -------")
+                logging.debug("------ SAVING KEYMAT IN I2 ------- %s %s" % (src_str, dst_str))
                 logging.debug("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                 #if Utils.is_hit_smaller(rhit, ihit):
                 #    self.keymat_storage.save(Utils.ipv6_bytes_to_hex_formatted(rhit), 
@@ -1688,7 +1688,7 @@ class HIPLib():
                             Utils.ipv6_bytes_to_hex_formatted(ihit))
                     
                     if not sv:
-                        sv = HIPState.StateVariables(hip_state.get_state(), ihit, rhit, dst, src)
+                        sv = HIPState.StateVariables(hip_state.get_state(), rhit, ihit, dst, src)
                      
                         self.state_variables.save(Utils.ipv6_bytes_to_hex_formatted(rhit),
                             Utils.ipv6_bytes_to_hex_formatted(ihit),
@@ -1706,7 +1706,7 @@ class HIPLib():
                             Utils.ipv6_bytes_to_hex_formatted(rhit))
                             
                     if not sv:
-                        sv = HIPState.StateVariables(hip_state.get_state(), ihit, rhit, dst, src)
+                        sv = HIPState.StateVariables(hip_state.get_state(), rhit, ihit, dst, src)
                         self.state_variables.save(Utils.ipv6_bytes_to_hex_formatted(ihit),
                             Utils.ipv6_bytes_to_hex_formatted(rhit),
                             sv)
@@ -1920,6 +1920,7 @@ class HIPLib():
                 keymat = self.keymat_storage.get(Utils.ipv6_bytes_to_hex_formatted(sv.ihit), 
                     Utils.ipv6_bytes_to_hex_formatted(sv.rhit));
                 
+                
                 if sv.is_responder:
                     
                     logging.debug("Reponder's HIT %s " % (Utils.ipv6_bytes_to_hex_formatted(ihit)))
@@ -1996,7 +1997,7 @@ class HIPLib():
                 buf = hip_update_packet.get_buffer() + buf;
 
                 if hmac.digest(bytearray(buf)) != mac_param.get_hmac():
-                    logging.critical("Invalid HMAC (UPDATE packet). Dropping the packet");
+                    logging.critical("Invalid HMAC (UPDATE packet). Dropping the packet %s %s" % (src_str, dst_str));
                     return [];
 
                 responders_public_key = self.pubkey_storage.get(Utils.ipv6_bytes_to_hex_formatted(ihit), 
