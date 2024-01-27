@@ -100,6 +100,7 @@ class HIPLib():
         self.hi           = None;
         self.ipv6_address = None;
         self.own_hit      = None;
+        self.own_hi_param = None;
         if self.config["security"]["sig_alg"] == 0x5: # RSA
             if self.config["security"]["hash_alg"] != 0x1: # SHA 256
                 raise Exception("Invalid hash algorithm. Must be 0x1")
@@ -143,6 +144,7 @@ class HIPLib():
         self.state_variables   = HIPState.Storage();
         self.key_info_storage  = HIPState.Storage();
         self.esp_transform_storage = HIPState.Storage();
+        self.hi_param_storage  = HIPState.Storage();
 
         if self.config["general"]["rekey_after_packets"] > ((2<<32)-1):
             self.config["general"]["rekey_after_packets"] = (2<<32)-1;
@@ -347,6 +349,8 @@ class HIPLib():
                 # It is important to set domain ID after host ID was set
                 logging.debug(self.di);
                 hi_param.set_domain_id(self.di);
+
+                self.own_hi_param = hi_param;
 
                 # HIP HIT suit list parameter
                 hit_suit_param = HIP.HITSuitListParameter();
@@ -733,9 +737,13 @@ class HIPLib():
                 key_info = HIPState.KeyInfo(info, salt, dh.ALG_ID);
 
                 if Utils.is_hit_smaller(rhit, ihit):
+                    self.hi_param_storage.save(Utils.ipv6_bytes_to_hex_formatted(rhit), 
+                        Utils.ipv6_bytes_to_hex_formatted(ihit), hi_param);
                     self.key_info_storage.save(Utils.ipv6_bytes_to_hex_formatted(rhit), 
                         Utils.ipv6_bytes_to_hex_formatted(ihit), key_info);
                 else:
+                    self.hi_param_storage.save(Utils.ipv6_bytes_to_hex_formatted(ihit), 
+                        Utils.ipv6_bytes_to_hex_formatted(rhit), hi_param);
                     self.key_info_storage.save(Utils.ipv6_bytes_to_hex_formatted(ihit), 
                         Utils.ipv6_bytes_to_hex_formatted(rhit), key_info);
 
@@ -1173,44 +1181,11 @@ class HIPLib():
                     return [];
                 logging.debug("Puzzle was solved");
 
-
-                #if Utils.is_hit_smaller(rhit, ihit):
-                logging.debug("**********************************************")
-                logging.debug("**********************************************")
-                logging.debug("**********************************************")
-                logging.debug("**********************************************")
-                logging.debug(r1_counter_param.get_counter())
-                logging.debug("**********************************************")
-                logging.debug("**********************************************")
-                logging.debug("**********************************************")
-                logging.debug("**********************************************")
                 dh = self.dh_storage[r1_counter_param.get_counter()].get(Utils.ipv6_bytes_to_hex_formatted(ihit), 
                     Utils.ipv6_bytes_to_hex_formatted(rhit));
-                #else:
-                #   dh = self.dh_storage[r1_counter_param.get_counter()].get(Utils.ipv6_bytes_to_hex_formatted(ihit), 
-                #        Utils.ipv6_bytes_to_hex_formatted(rhit));
-                #dh_storage.get(Utils.ipv6_bytes_to_hex_formatted(ihit), 
-                #	Utils.ipv6_bytes_to_hex_formatted(rhit));
 
-                logging.debug("I2 -> R2 DH PUBLIC KEY ---------------------")
-                logging.debug(dh_param.get_public_value())
-                logging.debug("++++++++++++++++++++++++++++++++++++++++++++")
                 public_key_r = dh.decode_public_key(dh_param.get_public_value());
                 shared_secret = dh.compute_shared_secret(public_key_r);
-                logging.debug("111111111111111111111111111")
-                logging.debug("111111111111111111111111111")
-                logging.debug("111111111111111111111111111")
-                logging.debug("111111111111111111111111111")
-                logging.debug("111111111111111111111111111")
-                logging.debug(dh_param.get_public_value())
-                logging.debug("111111111111111111111111111")
-                logging.debug("111111111111111111111111111")
-                logging.debug("111111111111111111111111111")
-                logging.debug("111111111111111111111111111")
-                logging.debug("111111111111111111111111111")
-                logging.debug("Secret key %d %s %s" % (shared_secret, src_str, dst_str));
-                logging.debug("I2 PACKET R1 COUNTER ------------- %d", r1_counter_param.get_counter());
-                logging.debug("SENDER %s, %s" % (src_str, dst_str))
 
                 info = Utils.sort_hits(ihit, rhit);
                 salt = irandom + jrandom;
@@ -1424,7 +1399,7 @@ class HIPLib():
                 hmac = HMACFactory.get(hmac_alg, hmac_key);
 
                 mac_param = HIP.MAC2Parameter();
-                mac_param.set_hmac(hmac.digest(bytearray(hip_r2_packet.get_buffer())));
+                mac_param.set_hmac(hmac.digest(bytearray(hip_r2_packet.get_buffer() + self.own_hi_param.get_byte_buffer())));
 
                 # Compute signature here
                 
@@ -1592,9 +1567,6 @@ class HIPLib():
                         sv.ihit = rhit;
                         sv.rhit = ihit;
                 
-                #logging.debug("CHANGING %d " % sv.is_responder)
-                logging.debug("CHANGING R2 %d %s %s" % (sv.is_responder, Utils.ipv6_bytes_to_hex_formatted(ihit), Utils.ipv6_bytes_to_hex_formatted(rhit)))
-                
                 st = time.time();
 
                 logging.info("R2 packet");
@@ -1654,7 +1626,14 @@ class HIPLib():
 
                 hip_r2_packet.add_parameter(esp_info_param);
 
-                if hmac.digest(hip_r2_packet.get_buffer()) != hmac_param.get_hmac():
+                if Utils.is_hit_smaller(rhit, ihit):
+                    hi_param = self.hi_param_storage.get(Utils.ipv6_bytes_to_hex_formatted(rhit), 
+                        Utils.ipv6_bytes_to_hex_formatted(ihit));
+                else:
+                    hi_param = self.hi_param_storage.get(Utils.ipv6_bytes_to_hex_formatted(ihit), 
+                        Utils.ipv6_bytes_to_hex_formatted(rhit));
+
+                if hmac.digest(hip_r2_packet.get_buffer() + hi_param.get_byte_buffer()) != hmac_param.get_hmac():
                     logging.critical("Invalid HMAC (R2). Dropping the packet");
                     return [];
                 else:
@@ -1708,7 +1687,6 @@ class HIPLib():
                     selected_esp_transform = self.esp_transform_storage.get(Utils.ipv6_bytes_to_hex_formatted(ihit), 
                         Utils.ipv6_bytes_to_hex_formatted(rhit))[0];
 
-                #selected_esp_transform = self.esp_transform_storage.get()
                 (cipher, hmac) = ESPTransformFactory.get(selected_esp_transform);
 
                 logging.debug(hmac.ALG_ID);
