@@ -1641,7 +1641,11 @@ class HIPLib():
 
                 (cipher, hmac) = ESPTransformFactory.get(selected_esp_transform);
 
-                # IN DIRECTION (IHIT - sender, RHIT - OWN)
+                logging.debug("DERIVING KEYS")
+                logging.debug(keymat)
+                # I2 PACKET
+                # Responder
+                # OUT DIRECTION (IHIT - sender, RHIT - OWN)
                 (cipher_key, hmac_key) = Utils.get_keys_esp(
                     keymat, 
                     keymat_index, 
@@ -1653,7 +1657,8 @@ class HIPLib():
                 self.ip_sec_sa.add_record(Utils.ipv6_bytes_to_hex_formatted(rhit), 
                     Utils.ipv6_bytes_to_hex_formatted(ihit), sa_record);
 
-                # OUT DIRECTION (IHIT - sender, RHIT - OWN)
+                
+                # IN DIRECTION (IHIT - sender, RHIT - OWN)
                 (cipher_key, hmac_key) = Utils.get_keys_esp(
                     keymat, 
                     keymat_index, 
@@ -1846,8 +1851,14 @@ class HIPLib():
 
                 logging.debug(hmac.ALG_ID);
                 logging.debug(cipher.ALG_ID);
+                
+                logging.debug("DERIVING KEYS")
+                logging.debug(keymat)
+
                 # Incomming SA (IPa, IPb)
-                # IN DIRECTION (IHIT - sender, RHIT - OWN)
+                # R2 PACKET
+                # Initiator
+                # OUT DIRECTION (IHIT - sender, RHIT - OWN)
                 (cipher_key, hmac_key) = Utils.get_keys_esp(
                     keymat, 
                     keymat_index, 
@@ -1861,7 +1872,7 @@ class HIPLib():
                     Utils.ipv6_bytes_to_hex_formatted(ihit), sa_record);
                 
                 # Outgoing SA (HITa, HITb)
-                # OUT DIRECTION (IHIT - sender, RHIT - OWN)
+                # IN DIRECTION (IHIT - sender, RHIT - OWN)
                 (cipher_key, hmac_key) = Utils.get_keys_esp(
                     keymat, 
                     keymat_index, 
@@ -1919,9 +1930,10 @@ class HIPLib():
                 
                 keymat = self.keymat_storage.get(Utils.ipv6_bytes_to_hex_formatted(sv.ihit), 
                     Utils.ipv6_bytes_to_hex_formatted(sv.rhit));
-                #if not keymat:
-                #    keymat = self.keymat_storage.get(Utils.ipv6_bytes_to_hex_formatted(sv.rhit), 
-                #        Utils.ipv6_bytes_to_hex_formatted(sv.ihit));
+                if not keymat:
+                    logging.debug("++++++++++++++++++++++++++++ ERROR INVALID KEYING MATERIAL UPDATE IN ++++++++++++++++++++++++++++")
+                    keymat = self.keymat_storage.get(Utils.ipv6_bytes_to_hex_formatted(sv.rhit), 
+                        Utils.ipv6_bytes_to_hex_formatted(sv.ihit));
                 
                 if sv.is_responder:
                     
@@ -2166,9 +2178,10 @@ class HIPLib():
 
                 keymat = self.keymat_storage.get(Utils.ipv6_bytes_to_hex_formatted(sv.ihit), 
                     Utils.ipv6_bytes_to_hex_formatted(sv.rhit));
-                #if not keymat:
-                #    keymat = self.keymat_storage.get(Utils.ipv6_bytes_to_hex_formatted(sv.rhit), 
-                #        Utils.ipv6_bytes_to_hex_formatted(sv.ihit));
+                if not keymat:
+                    logging.debug("++++++++++++++++++++++++++++ ERROR INVALID KEYING MATERIAL CLOSE IN ++++++++++++++++++++++++++++")
+                    keymat = self.keymat_storage.get(Utils.ipv6_bytes_to_hex_formatted(sv.rhit), 
+                        Utils.ipv6_bytes_to_hex_formatted(sv.ihit));
                 
                 if sv.is_responder:
                     hmac_alg  = HIT.get_responders_oga_id(rhit);
@@ -2380,9 +2393,10 @@ class HIPLib():
 
                 keymat = self.keymat_storage.get(Utils.ipv6_bytes_to_hex_formatted(sv.ihit), 
                     Utils.ipv6_bytes_to_hex_formatted(sv.rhit));
-                #if not keymat:
-                #    keymat = self.keymat_storage.get(Utils.ipv6_bytes_to_hex_formatted(sv.rhit), 
-                #        Utils.ipv6_bytes_to_hex_formatted(sv.ihit));
+                if not keymat:
+                    logging.debug("++++++++++++++++++++++++++++ ERROR INVALID KEYING MATERIAL CLOSE ACK IN ++++++++++++++++++++++++++++")
+                    keymat = self.keymat_storage.get(Utils.ipv6_bytes_to_hex_formatted(sv.rhit), 
+                        Utils.ipv6_bytes_to_hex_formatted(sv.ihit));
                 
                 if sv.is_responder:
                     hmac_alg  = HIT.get_responders_oga_id(rhit);
@@ -2701,6 +2715,7 @@ class HIPLib():
                 # Transition to an I1-Sent state
                 hip_state.i1_sent();
 
+                
                 if Utils.is_hit_smaller(rhit, ihit):
                     sv = self.state_variables.get(Utils.ipv6_bytes_to_hex_formatted(rhit),
                         Utils.ipv6_bytes_to_hex_formatted(ihit))
@@ -2714,6 +2729,9 @@ class HIPLib():
                         sv.rhit = rhit;
                     sv = self.state_variables.get(Utils.ipv6_bytes_to_hex_formatted(rhit),
                         Utils.ipv6_bytes_to_hex_formatted(ihit))
+                    sv.is_responder = False;
+                    sv.i1_timeout = time.time() + self.config["general"]["i1_timeout_s"];
+                    sv.i1_retries += 1;
                 else:
                     sv = self.state_variables.get(Utils.ipv6_bytes_to_hex_formatted(ihit),
                         Utils.ipv6_bytes_to_hex_formatted(rhit))
@@ -2727,13 +2745,9 @@ class HIPLib():
                         sv.rhit = rhit;
                     sv = self.state_variables.get(Utils.ipv6_bytes_to_hex_formatted(ihit),
                         Utils.ipv6_bytes_to_hex_formatted(rhit))
-                #sv = state_variables.get(Utils.ipv6_bytes_to_hex_formatted(rhit),
-                #	Utils.ipv6_bytes_to_hex_formatted(ihit))
-                
-                sv.is_responder = False;
-
-                sv.i1_timeout = time.time() + self.config["general"]["i1_timeout_s"];
-                sv.i1_retries += 1;
+                    sv.is_responder = False;
+                    sv.i1_timeout = time.time() + self.config["general"]["i1_timeout_s"];
+                    sv.i1_retries += 1;
             elif hip_state.is_established():
                 #logging.debug("Sending IPSEC packet...")
                 # IPv6 fields
@@ -2855,9 +2869,10 @@ class HIPLib():
         
             keymat = self.keymat_storage.get(Utils.ipv6_bytes_to_hex_formatted(sv.ihit), 
                 Utils.ipv6_bytes_to_hex_formatted(sv.rhit));
-            #if not keymat:
-            #    keymat = self.keymat_storage.get(Utils.ipv6_bytes_to_hex_formatted(sv.rhit), 
-            #        Utils.ipv6_bytes_to_hex_formatted(sv.ihit));
+            if not keymat:
+                logging.debug("++++++++++++++++++++++++++++ ERROR INVALID KEYING MATERIAL ++++++++++++++++++++++++++++")
+                keymat = self.keymat_storage.get(Utils.ipv6_bytes_to_hex_formatted(sv.rhit), 
+                    Utils.ipv6_bytes_to_hex_formatted(sv.ihit));
             logging.debug("Responder's HIT %s" % (Utils.ipv6_bytes_to_hex_formatted(sv.rhit)))
             logging.debug("Initiator's HIT %s" % (Utils.ipv6_bytes_to_hex_formatted(sv.ihit)))
             hmac_alg  = HIT.get_responders_oga_id(sv.rhit);
@@ -2972,7 +2987,10 @@ class HIPLib():
                     #       Utils.ipv6_bytes_to_hex_formatted(sv.rhit));
                     keymat = self.keymat_storage.get(Utils.ipv6_bytes_to_hex_formatted(sv.ihit), 
                         Utils.ipv6_bytes_to_hex_formatted(sv.rhit));
-
+                    if not keymat:
+                        logging.debug("++++++++++++++++++++++++++++ ERROR INVALID KEYING MATERIAL UPDATE PACKET OUT ++++++++++++++++++++++++++++")
+                        keymat = self.keymat_storage.get(Utils.ipv6_bytes_to_hex_formatted(sv.rhit), 
+                            Utils.ipv6_bytes_to_hex_formatted(sv.ihit));
                     #if sv.is_responder:
                     #	logging.debug("Reponder's HIT %s " % (Utils.ipv6_bytes_to_hex_formatted(sv.rhit)))
                     #	logging.debug("Initiator's HIT %s " % (Utils.ipv6_bytes_to_hex_formatted(sv.ihit)))
@@ -3079,9 +3097,10 @@ class HIPLib():
                     #        Utils.ipv6_bytes_to_hex_formatted(sv.rhit));
                     keymat = self.keymat_storage.get(Utils.ipv6_bytes_to_hex_formatted(sv.ihit), 
                         Utils.ipv6_bytes_to_hex_formatted(sv.rhit));
-                    #if not keymat:
-                    #    keymat = self.keymat_storage.get(Utils.ipv6_bytes_to_hex_formatted(sv.rhit), 
-                    #        Utils.ipv6_bytes_to_hex_formatted(sv.ihit));
+                    if not keymat:
+                        logging.debug("++++++++++++++++++++++++++++ ERROR INVALID KEYING MATERIAL UPDATE PACKET OUT ++++++++++++++++++++++++++++")
+                        keymat = self.keymat_storage.get(Utils.ipv6_bytes_to_hex_formatted(sv.rhit), 
+                            Utils.ipv6_bytes_to_hex_formatted(sv.ihit));
                     #if sv.is_responder:
                     #	logging.debug("Reponder's HIT %s " % (Utils.ipv6_bytes_to_hex_formatted(sv.rhit)))
                     #	logging.debug("Initiator's HIT %s " % (Utils.ipv6_bytes_to_hex_formatted(sv.ihit)))
@@ -3189,8 +3208,8 @@ class HIPLib():
                     if sv.is_responder:
                         hip_i1_packet.set_senders_hit(sv.rhit);
                         hip_i1_packet.set_receivers_hit(sv.ihit);
-                        #sv.ihit = sv.rhit
-                        #sv.rhit = sv.ihit
+                        sv.ihit = sv.rhit
+                        sv.rhit = sv.ihit
                         logging.debug("Source HIT %s " % (Utils.ipv6_bytes_to_hex_formatted(sv.rhit)))
                         logging.debug("Destination HIT %s " % (Utils.ipv6_bytes_to_hex_formatted(sv.ihit)))
                     else:
@@ -3259,9 +3278,9 @@ class HIPLib():
                     #else:
                     response.append((bytearray(sv.i2_packet.get_buffer()), (dst_str.strip(), 0)))
                     
-                    #if sv.is_responder:
-                    #    sv.ihit = sv.rhit
-                    #    sv.rhit = sv.ihit
+                    if sv.is_responder:
+                        sv.ihit = sv.rhit
+                        sv.rhit = sv.ihit
 
                     sv.is_responder = False;
 
@@ -3286,9 +3305,10 @@ class HIPLib():
 
                     keymat = self.keymat_storage.get(Utils.ipv6_bytes_to_hex_formatted(sv.ihit), 
                         Utils.ipv6_bytes_to_hex_formatted(sv.rhit));
-                    #if not keymat:
-                    #    keymat = self.keymat_storage.get(Utils.ipv6_bytes_to_hex_formatted(sv.rhit), 
-                    #        Utils.ipv6_bytes_to_hex_formatted(sv.ihit));
+                    if not keymat:
+                        logging.debug("++++++++++++++++++++++++++++ ERROR INVALID KEYING MATERIAL CLOSE PACKET OUT++++++++++++++++++++++++++++")
+                        keymat = self.keymat_storage.get(Utils.ipv6_bytes_to_hex_formatted(sv.rhit), 
+                            Utils.ipv6_bytes_to_hex_formatted(sv.ihit));
                     #if sv.is_responder:
                     #	logging.debug("Reponder's HIT %s " % (Utils.ipv6_bytes_to_hex_formatted(sv.rhit)))
                     #	logging.debug("Initiator's HIT %s " % (Utils.ipv6_bytes_to_hex_formatted(sv.ihit)))
