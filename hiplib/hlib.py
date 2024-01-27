@@ -512,9 +512,6 @@ class HIPLib():
                     logging.debug("Dropping packet... Invalid state");
                     return [];
 
-                #logging.debug("CHANGING %d " % sv.is_responder)
-                logging.debug("CHANGING R1 %d %s %s" % (sv.is_responder, Utils.ipv6_bytes_to_hex_formatted(ihit), Utils.ipv6_bytes_to_hex_formatted(rhit)))
-
                 if Utils.is_hit_smaller(rhit, ihit):
                     sv = self.state_variables.get(Utils.ipv6_bytes_to_hex_formatted(rhit),
                             Utils.ipv6_bytes_to_hex_formatted(ihit))
@@ -551,6 +548,9 @@ class HIPLib():
                         sv.ihit = rhit;
                         sv.rhit = ihit;
 
+
+                #logging.debug("CHANGING %d " % sv.is_responder)
+                logging.debug("CHANGING R1 %d %s %s" % (sv.is_responder, Utils.ipv6_bytes_to_hex_formatted(ihit), Utils.ipv6_bytes_to_hex_formatted(rhit)))
 
                 oga = HIT.get_responders_oga_id(ihit);
                 
