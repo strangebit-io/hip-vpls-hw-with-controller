@@ -362,7 +362,6 @@ class HIPLib():
 
                 # HIP signature parameter
                 signature_param = HIP.Signature2Parameter();
-                #
 
                 # Compute signature here
                 buf = r1counter_param.get_byte_buffer() + \
@@ -1022,10 +1021,6 @@ class HIPLib():
                         sv.is_responder = True;
                         sv.ihit = ihit;
                         sv.rhit = rhit;
-                
-                #logging.debug("CHANGING %d " % sv.is_responder)
-                logging.debug("CHANGING I2 %d %s %s" % (sv.is_responder, Utils.ipv6_bytes_to_hex_formatted(ihit), Utils.ipv6_bytes_to_hex_formatted(rhit)))
-
 
                 solution_param     = None;
                 r1_counter_param   = None;
@@ -1226,16 +1221,6 @@ class HIPLib():
                 keymat_length_in_octets = Utils.compute_keymat_length(hmac_alg, selected_cipher);
                 keymat = Utils.kdf(hmac_alg, salt, Math.int_to_bytes(shared_secret), info, keymat_length_in_octets);
 
-                logging.debug("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                logging.debug("------ SAVING KEYMAT IN I2 ------- %s %s %d" % (src_str, dst_str, sv.is_responder))
-                logging.debug("------ SAVING KEYMAT IN I2 ------- %s %s %d" % (Utils.ipv6_bytes_to_hex_formatted(ihit), Utils.ipv6_bytes_to_hex_formatted(rhit), sv.is_responder))
-                logging.debug("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                #if Utils.is_hit_smaller(rhit, ihit):
-                #    self.keymat_storage.save(Utils.ipv6_bytes_to_hex_formatted(rhit), 
-                #        Utils.ipv6_bytes_to_hex_formatted(ihit), keymat);
-                #else:
-                #    self.keymat_storage.save(Utils.ipv6_bytes_to_hex_formatted(ihit), 
-                #        Utils.ipv6_bytes_to_hex_formatted(rhit), keymat);
                 self.keymat_storage.save(Utils.ipv6_bytes_to_hex_formatted(ihit), 
                 	Utils.ipv6_bytes_to_hex_formatted(rhit), keymat);
 
@@ -1475,9 +1460,6 @@ class HIPLib():
                     or hip_state.is_closed()):
                     hip_state.r2_sent();
                     logging.debug("Sending R2 packet to %s %f" % (dst_str, time.time() - st));
-                    #hip_socket.sendto(
-                    #    bytearray(ipv4_packet.get_buffer()), 
-                    #    (dst_str.strip(), 0));
                     response.append((bytearray(ipv4_packet.get_buffer()), (dst_str.strip(), 0)))
 
                 logging.debug("Setting SA records...");
