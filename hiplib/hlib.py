@@ -789,7 +789,7 @@ class HIPLib():
                 keymat = Utils.kdf(hmac_alg, salt, Math.int_to_bytes(shared_secret), info, keymat_length_in_octets);
                 self.keymat_storage.save(Utils.ipv6_bytes_to_hex_formatted(rhit), 
                     Utils.ipv6_bytes_to_hex_formatted(ihit), keymat);
-                
+                logging.debug("Saving keying material in R1 %s %s" % (dst_str, src_str))
 
                 logging.debug("Processing R1 packet %f" % (time.time() - st));
 
@@ -1223,6 +1223,8 @@ class HIPLib():
 
                 self.keymat_storage.save(Utils.ipv6_bytes_to_hex_formatted(ihit), 
                 	Utils.ipv6_bytes_to_hex_formatted(rhit), keymat);
+                
+                logging.debug("Saving keying material in I2 %s %s" % (dst_str, src_str))
 
                 if Utils.is_hit_smaller(rhit, ihit):
                     self.cipher_storage.save(Utils.ipv6_bytes_to_hex_formatted(rhit), 
@@ -2362,15 +2364,6 @@ class HIPLib():
             frame  = IPSec.IPSecUtils.unpad(cipher.BLOCK_SIZE, decrypted_data);
             #next_header    = IPSec.IPSecUtils.get_next_header(decrypted_data);
             
-            # Send IPv6 packet to destination
-            #ipv6_packet = IPv6.IPv6Packet();
-            #ipv6_packet.set_version(IPv6.IPV6_VERSION);
-            #ipv6_packet.set_destination_address(ihit);
-            #ipv6_packet.set_source_address(rhit);
-            #ipv6_packet.set_next_header(next_header);
-            #ipv6_packet.set_hop_limit(1);
-            #ipv6_packet.set_payload_length(len(unpadded_data));
-            #ipv6_packet.set_payload(unpadded_data);
 
             if Utils.is_hit_smaller(rhit, ihit):
                 hip_state = self.hip_state_machine.get(Utils.ipv6_bytes_to_hex_formatted(rhit), 
@@ -2396,20 +2389,6 @@ class HIPLib():
     def process_l2_frame(self, frame, ihit, rhit, src_str):
         try:
             response = [];
-            #buf = hip_tun.read(MTU);
-            #logging.info("Got packet on TUN interface %s bytes" % (len(buf)));
-            #packet = IPv6.IPv6Packet(buf);
-            #ihit = packet.get_source_address();
-            #rhit = packet.get_destination_address();
-            #logging.info("Source %s " % Utils.ipv6_bytes_to_hex_formatted(ihit));
-            #logging.info("Destination %s " % Utils.ipv6_bytes_to_hex_formatted(rhit));
-            #logging.info("Version %s " % (packet.get_version()));
-            #logging.info("Traffic class %s " % (packet.get_traffic_class()));
-            #logging.info("Flow label %s " % (packet.get_flow_label()));
-            #logging.info("Packet length %s " %(packet.get_payload_length()));
-            #logging.info("Next header %s " % (packet.get_next_header()));
-            #logging.info("Hop limit %s" % (packet.get_hop_limit()));
-            # Get the state
             #logging.debug("Processing L2 frame")
             if Utils.is_hit_smaller(rhit, ihit):
                 hip_state = self.hip_state_machine.get(Utils.ipv6_bytes_to_hex_formatted(rhit), 
