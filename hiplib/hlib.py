@@ -23,6 +23,7 @@ __maintainer__ = "Dmitriy Kuptsov"
 __email__ = "dmitriy.kuptsov@gmail.com"
 __status__ = "development"
 
+from binascii import hexlify
 # Import the needed libraries
 # Stacktrace
 import traceback
@@ -1473,12 +1474,35 @@ class HIPLib():
                 # I2 PACKET
                 # Responder
                 # OUT DIRECTION (IHIT - sender, RHIT - OWN)
-                (cipher_key, hmac_key) = Utils.get_keys_esp(
-                    keymat, 
-                    keymat_index, 
-                    hmac.ALG_ID, 
-                    cipher.ALG_ID, 
-                    ihit, rhit);
+                # The first key out is for larger HIT
+                # If OWN HIT is larger then we SHOULD use the first key 
+                # THen we should pass the larger (or own) HIT first
+                if Utils.is_hit_smaller(ihit, rhit):
+                    (cipher_key, hmac_key) = Utils.get_keys_esp(
+                        keymat,
+                        keymat_index, 
+                        hmac.ALG_ID, 
+                        cipher.ALG_ID,
+                        rhit, ihit);
+                # If OWN HIT is smaller we should use the second key
+                # THen we should pass the larger (or own) HIT also first
+                else:
+                    (cipher_key, hmac_key) = Utils.get_keys_esp(
+                        keymat, 
+                        keymat_index, 
+                        hmac.ALG_ID, 
+                        cipher.ALG_ID, 
+                        ihit, rhit);
+                
+                
+                logging.debug(" DERVIVING KEYS OUT I2")
+                logging.debug(hexlify(hmac_key))
+                logging.debug(hexlify(cipher_key))
+                logging.debug(hexlify(self.own_hit))
+                
+                logging.debug(hexlify(ihit))
+                logging.debug(hexlify(rhit))
+                
                 sa_record = SA.SecurityAssociationRecord(cipher.ALG_ID, hmac.ALG_ID, cipher_key, hmac_key, src, dst);
                 sa_record.set_spi(responders_spi);
                 self.ip_sec_sa.add_record(Utils.ipv6_bytes_to_hex_formatted(rhit), 
@@ -1486,12 +1510,42 @@ class HIPLib():
 
                 
                 # IN DIRECTION (IHIT - sender, RHIT - OWN)
+                """
                 (cipher_key, hmac_key) = Utils.get_keys_esp(
                     keymat, 
                     keymat_index, 
                     hmac.ALG_ID, 
                     cipher.ALG_ID, 
                     rhit, ihit);
+                """
+
+                # If OWN HIT is smaller then we SHOULD use the first key 
+                # THen we should pass the larger (or own) HIT first
+                if Utils.is_hit_smaller(rhit, ihit):
+                    (cipher_key, hmac_key) = Utils.get_keys_esp(
+                        keymat,
+                        keymat_index, 
+                        hmac.ALG_ID, 
+                        cipher.ALG_ID,
+                        ihit, rhit);
+                # If OWN HIT is larger we should use the second key
+                # THen we should pass the larger (or own) HIT also first
+                else:
+                    (cipher_key, hmac_key) = Utils.get_keys_esp(
+                        keymat, 
+                        keymat_index, 
+                        hmac.ALG_ID, 
+                        cipher.ALG_ID, 
+                        ihit, rhit);
+
+                logging.debug(" DERVIVING KEYS IN I2")
+                logging.debug(hexlify(hmac_key))
+                logging.debug(hexlify(cipher_key))
+
+                logging.debug(hexlify(self.own_hit))
+                logging.debug(hexlify(rhit))
+                logging.debug(hexlify(ihit))
+
                 sa_record = SA.SecurityAssociationRecord(cipher.ALG_ID, hmac.ALG_ID, cipher_key, hmac_key, rhit, ihit);
                 sa_record.set_spi(initiators_spi);
                 self.ip_sec_sa.add_record(dst_str, src_str, sa_record);
@@ -1683,12 +1737,31 @@ class HIPLib():
                 # R2 PACKET
                 # Initiator
                 # OUT DIRECTION (IHIT - sender, RHIT - OWN)
-                (cipher_key, hmac_key) = Utils.get_keys_esp(
-                    keymat, 
-                    keymat_index, 
-                    hmac.ALG_ID, 
-                    cipher.ALG_ID, 
-                    ihit, rhit);
+                # If OWN HIT is larger then we SHOULD use the first key 
+                if Utils.is_hit_smaller(ihit, rhit):
+                    (cipher_key, hmac_key) = Utils.get_keys_esp(
+                        keymat,
+                        keymat_index, 
+                        hmac.ALG_ID, 
+                        cipher.ALG_ID,
+                        rhit, ihit);
+                # If OWN HIT is smaller we should use the second key
+                else:
+                    (cipher_key, hmac_key) = Utils.get_keys_esp(
+                        keymat, 
+                        keymat_index, 
+                        hmac.ALG_ID, 
+                        cipher.ALG_ID, 
+                        rhit, ihit);
+                
+                logging.debug(" DERVIVING KEYS OUT R2")
+                logging.debug(hexlify(hmac_key))
+                logging.debug(hexlify(cipher_key))
+
+                logging.debug(hexlify(self.own_hit))
+                logging.debug(hexlify(ihit))
+                logging.debug(hexlify(rhit))
+                
                 sa_record = SA.SecurityAssociationRecord(cipher.ALG_ID, hmac.ALG_ID, cipher_key, hmac_key, dst, src);
                 sa_record.set_spi(responders_spi);
                 
@@ -1697,12 +1770,39 @@ class HIPLib():
                 
                 # Outgoing SA (HITa, HITb)
                 # IN DIRECTION (IHIT - sender, RHIT - OWN)
+                """
                 (cipher_key, hmac_key) = Utils.get_keys_esp(
                     keymat, 
                     keymat_index, 
                     hmac.ALG_ID, 
                     cipher.ALG_ID, 
                     rhit, ihit);
+                """
+                # If OWN HIT is smaller then we SHOULD use the first key 
+                # THen we should pass the larger (or own) HIT first
+                if Utils.is_hit_smaller(rhit, ihit):
+                    (cipher_key, hmac_key) = Utils.get_keys_esp(
+                        keymat,
+                        keymat_index, 
+                        hmac.ALG_ID, 
+                        cipher.ALG_ID,
+                        ihit, rhit);
+                # If OWN HIT is larger we should use the second key
+                # THen we should pass the larger (or own) HIT also first
+                else:
+                    (cipher_key, hmac_key) = Utils.get_keys_esp(
+                        keymat, 
+                        keymat_index, 
+                        hmac.ALG_ID, 
+                        cipher.ALG_ID, 
+                        ihit, rhit);
+                logging.debug(" DERVIVING KEYS IN R2")
+                logging.debug(hexlify(hmac_key))
+                logging.debug(hexlify(cipher_key))
+
+                logging.debug(hexlify(self.own_hit))
+                logging.debug(hexlify(rhit))
+                logging.debug(hexlify(ihit))
                 
                 sa_record = SA.SecurityAssociationRecord(cipher.ALG_ID, hmac.ALG_ID, cipher_key, hmac_key, rhit, ihit);
                 sa_record.set_spi(responders_spi);
@@ -2320,12 +2420,12 @@ class HIPLib():
 
             sv.data_timeout = time.time() + self.config["general"]["UAL"];
 
-            """
-            logging.debug("------------------- HMAC key ------------------");
-            logging.debug(hmac_key);
-            logging.debug("Cipher key");
-            logging.debug(cipher_key);
-            """
+            logging.debug(hexlify(ihit))
+            logging.debug(hexlify(rhit))
+            logging.debug("------------------- HMAC key IPSEC ------------------");
+            logging.debug(hexlify(hmac_key));
+            logging.debug("Cipher key IPSEC");
+            logging.debug(hexlify(cipher_key));
 
             icv         = ip_sec_packet.get_byte_buffer()[-hmac_alg.LENGTH:];
 
@@ -2518,14 +2618,12 @@ class HIPLib():
                 iv         = Utils.generate_random(cipher.BLOCK_SIZE);
                 sa_record.increment_sequence();
 
-                """
-                logging.debug("HMAC key");
-                logging.debug(hmac_key);
-                logging.debug("Cipher key");
-                logging.debug(cipher_key);
+                logging.debug("HMAC key L2 frame");
+                logging.debug(hexlify(hmac_key));
+                logging.debug("Cipher key L2 frame");
+                logging.debug(hexlify(cipher_key));
                 logging.debug("IV");
-                logging.debug(iv);
-                """
+                logging.debug(hexlify(iv));
 
                 padded_data = IPSec.IPSecUtils.pad(cipher.BLOCK_SIZE, data, 0x0);
                 #logging.debug("Length of the padded data %d" % (len(padded_data)));

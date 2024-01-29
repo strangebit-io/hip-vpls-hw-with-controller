@@ -353,12 +353,20 @@ class Utils():
 		ihit = Math.bytes_to_int(ihit_bytes);
 		rhit = Math.bytes_to_int(rhit_bytes);
 
+		logging.debug("----------------------------")
+		logging.debug(ihit)
+		logging.debug(rhit)
+		logging.debug(hexlify(ihit_bytes))
+		logging.debug(hexlify(rhit_bytes))
+		logging.debug("----------------------------")
+
 		hmac = HMACFactory.get(hmac_alg, None);
 		cipher  = SymmetricCiphersFactory.get(cipher_alg);
 		
 		#offset = 2*(hmac.LENGTH + cipher.KEY_SIZE_BITS);
 		offset = keymat_index;
 		if ihit < rhit:
+			logging.debug(".....USING SECOND KEY......")
 			offset += (hmac.LENGTH + cipher.KEY_SIZE_BITS);
 		return (keymat[offset: offset + cipher.KEY_SIZE_BITS], \
 			keymat[offset + cipher.KEY_SIZE_BITS: offset + cipher.KEY_SIZE_BITS + hmac.LENGTH]);
