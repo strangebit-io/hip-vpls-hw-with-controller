@@ -135,7 +135,8 @@ def open_controller_socket():
     """
     Conncects to controller in the cloud
     """
-    ctx = ssl.create_default_context();
+    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    ctx.minimum_version = ssl.TLSVersion.TLSv1_3
     ctx.load_verify_locations(hip_config.config["controller"]["ca_cert"]);
     ip = socket.gethostbyname(hip_config.config["controller"]["controller_host_name"])
     sock = socket.create_connection((ip, hip_config.config["controller"]["controller_port"]));
@@ -202,7 +203,7 @@ def config_loop():
     global hip_config_socket
     global hip_config_socket_lock
     while True:
-        logging.debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+        logging.debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> READING FORM CONFIG SOCKET >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
         if not hip_config_socket:
             buf = bytearray([])
             sleep(hip_config.config["controller"]["heartbeat_interval"]);
@@ -211,7 +212,9 @@ def config_loop():
         try:
             buf_ = bytearray(hip_config_socket.recv(hip_config.config["controller"]["default_buffer"]))
             buf += buf_
-        except:
+        except Exception as e:
+            logging.debug("GOT EXCEPTION IN CONFIG LOOP")
+            logging.debug(e)
             hip_config_socket = None
             buf = bytearray([])
             sleep(hip_config.config["controller"]["heartbeat_interval"]);
@@ -320,6 +323,7 @@ def heart_beat_loop():
         hmac = digest.SHA256HMAC(bytearray(hip_config.config["controller"]["master_secret"], encoding="ascii"))
         hmac_ = hmac.digest(buf)
         heartbeat.set_hmac(hmac_)
+        """
         logging.debug("---------------------")
         logging.debug(hexlify(buf))
         logging.debug(bytearray(hip_config.config["controller"]["master_secret"], encoding="ascii"))
@@ -329,6 +333,7 @@ def heart_beat_loop():
         logging.debug("IP: " + str(hexlify(heartbeat.get_ip())))
         logging.debug("MAC: " + str(hexlify(heartbeat.get_hmac())))
         logging.debug("++++++++++++++++++++++")
+        """
         bytes_sent = hip_config_socket.send(heartbeat.get_buffer());
         if bytes_sent == 0:
             try:
@@ -344,7 +349,7 @@ def heart_beat_loop():
 def hip_loop():
     while True:
         try:
-            logging.debug("Got HIP packet on the interface")
+            #logging.debug("Got HIP packet on the interface")
             packet = bytearray(hip_socket.recv(1518))
             packets = hiplib.process_hip_packet(packet);
             for (packet, dest) in packets:
@@ -352,6 +357,7 @@ def hip_loop():
         except Exception as e:
             logging.debug("Exception occured while processing HIP packet")
             logging.debug(e)
+            logging.debug(traceback.format_exc())
 
 def ip_sec_loop():
     while True:
@@ -377,7 +383,9 @@ def ip_sec_loop():
             ee = time()
             #logging.info("Total time to process the IPSEC packet %f" % (ee - es))
         except Exception as e:
+            logging.debug("Exception occured while processing IPSEC packet")
             logging.critical(e)
+            logging.debug(traceback.format_exc())
 
 def ether_loop():
     while True:
@@ -421,6 +429,7 @@ def ether_loop():
         except Exception as e:
            logging.debug("Exception occured while processing L2 frame")
            logging.debug(e)
+           logging.debug(traceback.format_exc())
 
 
 # Register exit handler
@@ -446,11 +455,12 @@ def run_switch():
             packets = hiplib.maintenance();
             for (packet, dest) in packets:
                 hip_socket.sendto(packet, dest)
-            logging.debug("...Periodic cleaning task...")
+            #logging.debug("...Periodic cleaning task...")
             sleep(1);
         except Exception as e:
             logging.critical("Exception occured while processing HIP packets in maintenance loop")
             logging.critical(e);
+            logging.debug(traceback.format_exc())
             sleep(1)
 
 run_switch()
