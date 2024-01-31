@@ -17,6 +17,16 @@
 
 from Crypto.Hash import HMAC, SHA256, SHA224, SHA384, SHA1
 
+import ctypes
+from ctypes import cdll
+from array import array
+
+lib = cdll.LoadLibrary('/opt/hip-vpls/hiplib/crypto/hmaclib.so')
+
+#lib.freeme.argtypes = ctypes.POINTER(ctypes.c_ubyte),
+lib.hmac_sha256.argtypes = ctypes.POINTER(ctypes.c_ubyte), ctypes.c_uint64, ctypes.POINTER(ctypes.c_ubyte)
+lib.hmac_sha256.restype = ctypes.POINTER(ctypes.c_ubyte)
+
 class HMACDigest():
 	LENGTH = 0x0;
 	ALG_ID = 0x0;
@@ -29,6 +39,22 @@ class HMACDigest():
 class SHA256HMAC(HMACDigest):
 	LENGTH = 0x20;
 	ALG_ID = 0x1;
+	def __init__(self, key = None):
+		self.key = key;
+
+	def digest(self, data, key = None):
+		if key:
+			self.key = key;
+		v = array('B',self.key);pkey = (ctypes.c_ubyte * len(v)).from_buffer(v)
+		v = array('B',data);pdata = (ctypes.c_ubyte * len(v)).from_buffer(v)
+		addr = lib.hmac_sha256(pkey, len(self.key), pdata, len(data))
+		hmac = ctypes.string_at(addr, 32)
+		lib.freeme(addr);
+		return hmac
+"""
+class SHA256HMAC(HMACDigest):
+	LENGTH = 0x20;
+	ALG_ID = 0x1;
 	
 	def __init__(self, key = None):
 		self.key = key;
@@ -38,7 +64,7 @@ class SHA256HMAC(HMACDigest):
 		self.hmac = HMAC.new(self.key, digestmod=SHA256)
 		self.hmac.update(data);
 		return self.hmac.digest();
-
+"""
 class SHA384HMAC(HMACDigest):
 	LENGTH = 0x30;
 	ALG_ID = 0x2;
