@@ -2976,8 +2976,8 @@ class HIPLib():
                     if sv.is_responder:
                         hip_i1_packet.set_senders_hit(sv.rhit);
                         hip_i1_packet.set_receivers_hit(sv.ihit);
-                        sv.ihit = sv.rhit
-                        sv.rhit = sv.ihit
+                        #sv.ihit = sv.rhit
+                        #sv.rhit = sv.ihit
                         logging.debug("Source HIT %s " % (Utils.ipv6_bytes_to_hex_formatted(sv.rhit)))
                         logging.debug("Destination HIT %s " % (Utils.ipv6_bytes_to_hex_formatted(sv.ihit)))
                     else:
@@ -2986,7 +2986,7 @@ class HIPLib():
                         logging.debug("Source HIT %s " % (Utils.ipv6_bytes_to_hex_formatted(sv.ihit)))
                         logging.debug("Destination HIT %s " % (Utils.ipv6_bytes_to_hex_formatted(sv.rhit)))
 
-                    sv.is_responder = False;
+                    #sv.is_responder = False;
                     hip_i1_packet.set_next_header(HIP.HIP_IPPROTO_NONE);
                     hip_i1_packet.set_version(HIP.HIP_VERSION);
                     hip_i1_packet.add_parameter(dh_groups_param);
@@ -3039,11 +3039,11 @@ class HIPLib():
                     logging.debug("Initiator's HIT %s " % (Utils.ipv6_bytes_to_hex_formatted(sv.ihit)))
                     response.append((bytearray(sv.i2_packet.get_buffer()), (dst_str.strip(), 0)))
                     
-                    if sv.is_responder:
-                        sv.ihit = sv.rhit
-                        sv.rhit = sv.ihit
+                    #if sv.is_responder:
+                    #sv.ihit = sv.rhit
+                    #sv.rhit = sv.ihit
 
-                    sv.is_responder = False;
+                    #sv.is_responder = False;
 
                     if sv.i2_retries > self.config["general"]["i2_retries"]:
                         hip_state.failed();
