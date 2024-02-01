@@ -1716,22 +1716,22 @@ class HIPLib():
                 # Initiator
                 # OUT DIRECTION (IHIT - sender, RHIT - OWN)
                 # If OWN HIT is larger then we SHOULD use the first key 
-                if Utils.is_hit_smaller(ihit, rhit):
-                    (cipher_key, hmac_key) = Utils.get_keys_esp(
-                        keymat,
-                        keymat_index, 
-                        hmac.ALG_ID, 
-                        cipher.ALG_ID,
-                        rhit, ihit);
+                #if Utils.is_hit_smaller(ihit, rhit):
+                (cipher_key, hmac_key) = Utils.get_keys_esp(
+                    keymat,
+                    keymat_index, 
+                    hmac.ALG_ID, 
+                    cipher.ALG_ID,
+                    rhit, ihit);
                 # If OWN HIT is smaller we should use the second key
-                else:
+                """else:
                     (cipher_key, hmac_key) = Utils.get_keys_esp(
                         keymat, 
                         keymat_index, 
                         hmac.ALG_ID, 
                         cipher.ALG_ID, 
                         rhit, ihit);
-                
+                """
                 logging.debug(" DERVIVING KEYS OUT R2")
                 logging.debug(hexlify(hmac_key))
                 logging.debug(hexlify(cipher_key))
@@ -1748,17 +1748,17 @@ class HIPLib():
                 
                 # Outgoing SA (HITa, HITb)
                 # IN DIRECTION (IHIT - sender, RHIT - OWN)
-                """
+                
                 (cipher_key, hmac_key) = Utils.get_keys_esp(
                     keymat, 
                     keymat_index, 
                     hmac.ALG_ID, 
                     cipher.ALG_ID, 
-                    rhit, ihit);
-                """
+                    ihit, rhit);
+                
                 # If OWN HIT is smaller then we SHOULD use the first key 
                 # THen we should pass the larger (or own) HIT first
-                if Utils.is_hit_smaller(rhit, ihit):
+                """if Utils.is_hit_smaller(rhit, ihit):
                     (cipher_key, hmac_key) = Utils.get_keys_esp(
                         keymat,
                         keymat_index, 
@@ -1774,6 +1774,7 @@ class HIPLib():
                         hmac.ALG_ID, 
                         cipher.ALG_ID, 
                         ihit, rhit);
+                """
                 logging.debug(" DERVIVING KEYS IN R2")
                 logging.debug(hexlify(hmac_key))
                 logging.debug(hexlify(cipher_key))
