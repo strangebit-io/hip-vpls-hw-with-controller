@@ -94,7 +94,7 @@ logging.basicConfig(
     level=logging.DEBUG,
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[
-        RotatingFileHandler("hipls.log"),
+        RotatingFileHandler("hipls.log", maxBytes = 10*1024*1024),
         logging.StreamHandler(sys.stdout)
     ]
 );
