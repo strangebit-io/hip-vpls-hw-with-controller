@@ -45,7 +45,7 @@ config = {
 		"UAL": 120,                                            # Unused Association Lifetime (UAL)
 		"MSL": 120,                                            # Maximum Segment Lifetime (MSL)
 		"EC": 120,                                             # Exchange Complete (EC) timeout
-		"failed_timeout": 120,                                 # Failed timeout
+		"failed_timeout": 30,                                 # Failed timeout
 		"rekey_after_packets": 100                             # When to rekey the association
 	},
 	"firewall": {

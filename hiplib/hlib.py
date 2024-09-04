@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 __author__ = "Dmitriy Kuptsov"
-__copyright__ = "Copyright 2020, stangebit"
+__copyright__ = "Copyright 2020, strangebit"
 __license__ = "GPL"
 __version__ = "0.0.1b"
 __maintainer__ = "Dmitriy Kuptsov"
@@ -1382,8 +1382,10 @@ class HIPLib():
                 (aes_key, hmac_key) = Utils.get_keys(keymat, hmac_alg, selected_cipher, rhit, ihit);
                 hmac = HMACFactory.get(hmac_alg, hmac_key);
 
+                hip_r2_packet.add_parameter(self.own_hi_param)
+
                 mac_param = HIP.MAC2Parameter();
-                mac_param.set_hmac(hmac.digest(bytearray(hip_r2_packet.get_buffer() + self.own_hi_param.get_byte_buffer())));
+                mac_param.set_hmac(hmac.digest(bytearray(hip_r2_packet.get_buffer())));
 
                 # Compute signature here
                 
@@ -1648,8 +1650,10 @@ class HIPLib():
                 else:
                     hi_param = self.hi_param_storage.get(Utils.ipv6_bytes_to_hex_formatted(ihit), 
                         Utils.ipv6_bytes_to_hex_formatted(rhit));
+                
+                hip_r2_packet.add_parameter(hi_param)
 
-                if hmac.digest(hip_r2_packet.get_buffer() + hi_param.get_byte_buffer()) != hmac_param.get_hmac():
+                if hmac.digest(hip_r2_packet.get_buffer()) != hmac_param.get_hmac():
                     logging.critical("Invalid HMAC (R2). Dropping the packet");
                     return [];
                 else:
@@ -2583,10 +2587,10 @@ class HIPLib():
                 sv.data_timeout = time.time() + self.config["general"]["UAL"];
 
                 # Get SA record and construct the ESP payload
-                #try:
-                sa_record  = self.ip_sec_sa.get_record(ihit_str, rhit_str);
-                #except:
-                #    sa_record  = self.ip_sec_sa.get_record(rhit_str, ihit_str);
+                try:
+                    sa_record  = self.ip_sec_sa.get_record(ihit_str, rhit_str);
+                except:
+                    sa_record  = self.ip_sec_sa.get_record(rhit_str, ihit_str);
                 seq        = sa_record.get_sequence();
                 spi        = sa_record.get_spi();
                 hmac_alg   = sa_record.get_hmac_alg();

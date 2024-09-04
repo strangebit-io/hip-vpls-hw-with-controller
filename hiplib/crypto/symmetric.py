@@ -153,7 +153,7 @@ class AES256CBCCipher(SymmetricCrypto):
 
 	def encrypt(self, key, iv, data):
 		"""
-		Encryptes the plaintext using
+		Encrypts the plaintext using hw accelerated library
 		"""
 		if len(data) % 16 != 0:
 			return
