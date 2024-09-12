@@ -1,4 +1,4 @@
-# Host Identity Protocol Based VPLS tailored for NanoPiR2S and Intel CPUs
+# Host Identity Protocol Based VPLS tailored for Intel CPUs with AES and SHA-2 hardware acceleration
 
 Deployment scenario:
 
