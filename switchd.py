@@ -441,7 +441,7 @@ ether_if_th_loop = threading.Thread(target = ether_loop, args = (), daemon = Tru
 heart_beat_th_loop = threading.Thread(target = heart_beat_loop, args = (), daemon = True);
 config_th_loop = threading.Thread(target = config_loop, args = (), daemon = True);
 
-logging.info("Starting the CuteHIP");
+logging.info("Starting the switchd");
 
 hip_th_loop.start();
 ip_sec_th_loop.start();
